@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DNS & HTTP Checker</title>
+<style>
+body {
+  background-color: #121212;
+  color: #e0e0e0;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+}
+h1 {
+  text-align: center;
+  color: #00ff99;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+th, td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #333;
+}
+.status {
+  font-weight: bold;
+}
+.ok {
+  color: #00ff99;
+}
+.fail {
+  color: #ff5555;
+}
+</style>
+</head>
+<body>
+<h1>DNS & HTTP Checker</h1>
+<table>
+<thead>
+<tr>
+  <th>Domeniu</th>
+  <th>A Record</th>
+  <th>CNAME</th>
+  <th>HTTP</th>
+</tr>
+</thead>
+<tbody id="results"></tbody>
+</table>
+
+<script>
+const domains = [
+  "stayitready.com",
+  "www.stayitready.com",
+  "https://stayitready.com",
+  "https://www.stayitready.com"
+];
+
+async function checkDomain(dom) {
+  const row = document.getElementById(dom.id) || document.createElement('tr');
+  row.id = dom.id;
+
+  row.innerHTML = `
+    <td>${dom.name}</td>
+    <td class="status" id="${dom.id}-a">...</td>
+    <td class="status" id="${dom.id}-cname">...</td>
+    <td class="status" id="${dom.id}-http">...</td>
+  `;
+  if (!row.parentNode) document.getElementById('results').appendChild(row);
+
+  // DNS A Record
+  fetch(`https://dns.google/resolve?name=${dom.name}&type=A`)
+    .then(r => r.json())
+    .then(data => {
+      const aCell = document.getElementById(`${dom.id}-a`);
+      if (data.Answer) {
+        aCell.textContent = data.Answer[0].data;
+        aCell.className = 'status ok';
+      } else {
+        aCell.textContent = '❌';
+        aCell.className = 'status fail';
+      }
+    }).catch(() => {
+      const aCell = document.getElementById(`${dom.id}-a`);
+      aCell.textContent = '❌';
+      aCell.className = 'status fail';
+    });
+
+  // DNS CNAME Record
+  fetch(`https://dns.google/resolve?name=${dom.name}&type=CNAME`)
+    .then(r => r.json())
+    .then(data => {
+      const cnameCell = document.getElementById(`${dom.id}-cname`);
+      if (data.Answer) {
+        cnameCell.textContent = data.Answer[0].data;
+        cnameCell.className = 'status ok';
+      } else {
+        cnameCell.textContent = '❌';
+        cnameCell.className = 'status fail';
+      }
+    }).catch(() => {
+      const cnameCell = document.getElementById(`${dom.id}-cname`);
+      cnameCell.textContent = '❌';
+      cnameCell.className = 'status fail';
+    });
+
+  // HTTP status
+  let url = dom.name;
+  if (!url.startsWith("http")) url = "https://" + url;
+
+  fetch(url, { method: 'HEAD', mode: 'no-cors' })
+    .then(() => {
+      const httpCell = document.getElementById(`${dom.id}-http`);
+      httpCell.textContent = '✅';
+      httpCell.className = 'status ok';
+    })
+    .catch(() => {
+      const httpCell = document.getElementById(`${dom.id}-http`);
+      httpCell.textContent = '❌';
+      httpCell.className = 'status fail';
+    });
+}
+
+function updateAll() {
+  domains.forEach(name => {
+    checkDomain({ name, id: name.replace(/[^a-zA-Z0-9]/g, '-') });
+  });
+}
+
+updateAll();
+setInterval(updateAll, 5000);
+</script>
+</body>
+</html>
