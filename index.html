@@ -34,6 +34,14 @@ th, td {
 .fail {
   color: #ff5555;
 }
+#log {
+  margin-top: 30px;
+  background: #1e1e1e;
+  padding: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #333;
+}
 </style>
 </head>
 <body>
@@ -50,6 +58,9 @@ th, td {
 <tbody id="results"></tbody>
 </table>
 
+<h2>Log downtime</h2>
+<div id="log"></div>
+
 <script>
 const domains = [
   "stayitready.com",
@@ -57,6 +68,22 @@ const domains = [
   "https://stayitready.com",
   "https://www.stayitready.com"
 ];
+
+const lastStatus = {};  // ține statusul anterior pentru fiecare domeniu
+const downSince = {};   // când a început downtime-ul
+
+function getTimeRo() {
+  const now = new Date();
+  const roTime = new Date(now.getTime() + (2 * 60 * 60 * 1000)); // GMT+2
+  return roTime.toLocaleString('ro-RO');
+}
+
+function logEvent(text) {
+  const logDiv = document.getElementById('log');
+  const p = document.createElement('div');
+  p.textContent = `[${getTimeRo()}] ${text}`;
+  logDiv.prepend(p);
+}
 
 async function checkDomain(dom) {
   const row = document.getElementById(dom.id) || document.createElement('tr');
@@ -115,11 +142,28 @@ async function checkDomain(dom) {
       const httpCell = document.getElementById(`${dom.id}-http`);
       httpCell.textContent = '✅';
       httpCell.className = 'status ok';
+
+      if (lastStatus[dom.id] === 'down') {
+        const downTime = downSince[dom.id];
+        const upTime = new Date();
+        const duration = ((upTime - downTime) / 1000).toFixed(1);
+        logEvent(`${dom.name} UP after ${duration} sec downtime`);
+        delete downSince[dom.id];
+      }
+
+      lastStatus[dom.id] = 'up';
     })
     .catch(() => {
       const httpCell = document.getElementById(`${dom.id}-http`);
       httpCell.textContent = '❌';
       httpCell.className = 'status fail';
+
+      if (lastStatus[dom.id] !== 'down') {
+        downSince[dom.id] = new Date();
+        logEvent(`${dom.name} DOWN`);
+      }
+
+      lastStatus[dom.id] = 'down';
     });
 }
 
