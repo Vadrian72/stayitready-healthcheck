@@ -60,7 +60,14 @@ th, td {
 
 <h2>Log downtime</h2>
 <div id="log"></div>
-
+<script src="geovi-chat.js"></script>
+<script>
+  Geovi.init({
+    webhook: 'https://your-n8n-webhook-url',
+    greeting: 'Mesajul tău personalizat',
+    position: 'bottom-right'
+  });
+</script>
 <script>
 const domains = [
   "stayitready.com",
