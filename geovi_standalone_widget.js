@@ -728,5 +728,14 @@
             window.Geovi.init(webhook);
         }
     });
-
+    window.addEventListener('beforeunload', function() {
+    if (conversationStarted && messageCount > 2) {
+        // Trimite conversația când se închide pagina
+        navigator.sendBeacon(webhookUrl + '/end-session', JSON.stringify({
+            action: 'session_end',
+            conversation: getAllMessages(),
+            sessionId: sessionId
+        }));
+    }
+});
 })();
