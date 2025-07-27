@@ -243,6 +243,8 @@
             gap: 12px !important;
             align-items: center !important;
             flex-shrink: 0 !important;
+            min-height: 90px !important;
+            height: 90px !important;
         }
 
         .geovi-field-v3 {
@@ -254,6 +256,12 @@
             outline: none !important;
             background: white !important;
             color: #333 !important;
+            display: block !important;
+            width: 100% !important;
+            height: 50px !important;
+            line-height: normal !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
         }
 
         .geovi-field-v3:focus {
@@ -271,6 +279,9 @@
             cursor: pointer !important;
             transition: all 0.2s ease !important;
             display: block !important;
+            min-width: 80px !important;
+            height: 50px !important;
+            flex-shrink: 0 !important;
         }
 
         .geovi-send-v3:active {
