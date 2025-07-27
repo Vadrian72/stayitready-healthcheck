@@ -427,7 +427,7 @@
                     Cu ce te pot ajuta astăzi?
                 </div>
             </div>
-            <div class="geovi-input-v3">
+            <div class="geovi-input-v3" id="geovi-input-area">
                 <input type="text" class="geovi-field-v3" id="geovi-field" placeholder="Scrie mesajul tău aici..." />
                 <button class="geovi-send-v3" id="geovi-send">Trimite</button>
             </div>
@@ -506,16 +506,46 @@
             this.field = document.getElementById('geovi-field');
             this.send = document.getElementById('geovi-send');
             this.close = document.getElementById('geovi-close');
+            this.inputArea = document.getElementById('geovi-input-area');
 
-            // DEBUG - Check if elements exist
-            console.log('🔍 Geovi Debug:');
-            console.log('- Field element:', this.field);
-            console.log('- Send element:', this.send);
-            console.log('- Chat element:', this.chat);
+            // DEBUG - EXTENDED LOGGING
+            console.log('🔍 Geovi Debug Extended:');
+            console.log('- Container:', this.container);
+            console.log('- Chat:', this.chat);
+            console.log('- Messages:', this.messages);
+            console.log('- Input Area:', this.inputArea);
+            console.log('- Field:', this.field);
+            console.log('- Send:', this.send);
+            
+            // Force input area to be visible
+            if (this.inputArea) {
+                this.inputArea.style.cssText = `
+                    position: fixed !important;
+                    bottom: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    height: 90px !important;
+                    background: red !important;
+                    z-index: 999999 !important;
+                    display: flex !important;
+                    padding: 20px !important;
+                    gap: 12px !important;
+                    align-items: center !important;
+                `;
+                console.log('- Input area forced to bottom!');
+            }
             
             if (this.field) {
-                console.log('- Field visible:', window.getComputedStyle(this.field).display);
-                console.log('- Field opacity:', window.getComputedStyle(this.field).opacity);
+                this.field.style.cssText = `
+                    flex: 1 !important;
+                    height: 50px !important;
+                    border: 3px solid blue !important;
+                    background: white !important;
+                    border-radius: 25px !important;
+                    padding: 15px !important;
+                    font-size: 16px !important;
+                `;
+                console.log('- Field forced styling!');
             }
         }
 
