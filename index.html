@@ -627,12 +627,11 @@
     }
     
     getSessionId() {
-      let sessionId = localStorage.getItem('geovi-session-id');
-      if (!sessionId) {
-        sessionId = 'geovi-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('geovi-session-id', sessionId);
+      // Use a simple session ID without localStorage for compatibility
+      if (!window.geoviSessionId) {
+        window.geoviSessionId = 'geovi-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
       }
-      return sessionId;
+      return window.geoviSessionId;
     }
     
     setLoading(loading) {
