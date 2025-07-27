@@ -84,15 +84,16 @@
 
         .geovi-mobile .geovi-chat-window {
             position: fixed !important;
-            bottom: 140px !important;
-            left: 10px !important;
-            right: 10px !important;
-            top: 60px !important;
-            width: auto !important;
-            height: auto !important;
-            max-height: none !important;
-            border-radius: 15px !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            top: 50vh !important;
+            width: 100% !important;
+            height: 50vh !important;
+            max-height: 50vh !important;
+            border-radius: 15px 15px 0 0 !important;
             border: 3px solid #FFD700 !important;
+            border-bottom: none !important;
             z-index: 999999 !important;
         }
 
@@ -705,20 +706,22 @@
             
             if (isShowing) {
                 this.chatWindow.classList.remove('show');
-                this.enableBodyScroll();
             } else {
                 this.chatWindow.classList.add('show');
                 
                 if (this.isMobile) {
-                    // Simple mobile window positioning - NO full screen
+                    // Half screen mobile positioning
                     setTimeout(() => {
                         this.chatWindow.style.position = 'fixed';
-                        this.chatWindow.style.bottom = '140px';
-                        this.chatWindow.style.left = '10px';
-                        this.chatWindow.style.right = '10px';
-                        this.chatWindow.style.top = '60px';
-                        this.chatWindow.style.width = 'auto';
-                        this.chatWindow.style.height = 'auto';
+                        this.chatWindow.style.bottom = '0';
+                        this.chatWindow.style.left = '0';
+                        this.chatWindow.style.right = '0';
+                        this.chatWindow.style.top = '50vh';
+                        this.chatWindow.style.width = '100%';
+                        this.chatWindow.style.height = '50vh';
+                        this.chatWindow.style.maxHeight = '50vh';
+                        this.chatWindow.style.borderRadius = '15px 15px 0 0';
+                        this.chatWindow.style.borderBottom = 'none';
                         this.chatWindow.style.zIndex = '999999';
                     }, 10);
                 }
