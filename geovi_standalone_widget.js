@@ -50,55 +50,54 @@
             }
         }
 
-        /* MOBILE STYLES - Force all mobile styles with !important */
+        /* MOBILE STYLES - Back to window approach with keyboard fix */
         .geovi-mobile .geovi-character {
-            width: 90px !important;
-            height: 90px !important;
+            width: 120px !important;
+            height: 120px !important;
         }
 
         .geovi-mobile .geovi-smiley-face {
-            width: 80px !important;
-            height: 80px !important;
-            border: 4px solid #000 !important;
+            width: 110px !important;
+            height: 110px !important;
+            border: 5px solid #000 !important;
             top: 5px !important;
             left: 5px !important;
         }
 
         .geovi-mobile .geovi-eyes {
-            gap: 12px !important;
-            margin-bottom: 8px !important;
+            gap: 18px !important;
+            margin-bottom: 12px !important;
         }
 
         .geovi-mobile .geovi-eye {
-            width: 14px !important;
-            height: 14px !important;
+            width: 20px !important;
+            height: 20px !important;
         }
 
         .geovi-mobile .geovi-smile {
-            width: 30px !important;
-            height: 15px !important;
-            border: 3px solid #000 !important;
+            width: 40px !important;
+            height: 20px !important;
+            border: 4px solid #000 !important;
             border-top: none !important;
-            border-radius: 0 0 30px 30px !important;
+            border-radius: 0 0 40px 40px !important;
         }
 
         .geovi-mobile .geovi-chat-window {
             position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
+            bottom: 140px !important;
+            left: 10px !important;
+            right: 10px !important;
+            top: 60px !important;
+            width: auto !important;
+            height: auto !important;
             max-height: none !important;
-            border-radius: 0 !important;
-            border: none !important;
+            border-radius: 15px !important;
+            border: 3px solid #FFD700 !important;
             z-index: 999999 !important;
         }
 
         .geovi-mobile .geovi-chat-header {
             padding: 16px !important;
-            font-size: 18px !important;
         }
 
         .geovi-mobile .geovi-chat-header h3 {
@@ -706,27 +705,21 @@
             
             if (isShowing) {
                 this.chatWindow.classList.remove('show');
-                if (this.isMobile) {
-                    this.enableBodyScroll();
-                }
+                this.enableBodyScroll();
             } else {
                 this.chatWindow.classList.add('show');
                 
                 if (this.isMobile) {
-                    this.disableBodyScroll();
-                    
-                    // Simple mobile full screen
+                    // Simple mobile window positioning - NO full screen
                     setTimeout(() => {
                         this.chatWindow.style.position = 'fixed';
-                        this.chatWindow.style.top = '0px';
-                        this.chatWindow.style.left = '0px';
-                        this.chatWindow.style.right = '0px';
-                        this.chatWindow.style.bottom = '0px';
-                        this.chatWindow.style.width = '100%';
-                        this.chatWindow.style.height = '100%';
+                        this.chatWindow.style.bottom = '140px';
+                        this.chatWindow.style.left = '10px';
+                        this.chatWindow.style.right = '10px';
+                        this.chatWindow.style.top = '60px';
+                        this.chatWindow.style.width = 'auto';
+                        this.chatWindow.style.height = 'auto';
                         this.chatWindow.style.zIndex = '999999';
-                        this.chatWindow.style.border = 'none';
-                        this.chatWindow.style.borderRadius = '0';
                     }, 10);
                 }
                 
@@ -745,29 +738,12 @@
         }
 
         disableBodyScroll() {
-            if (this.isMobile) {
-                // Simple body scroll disable
-                this.scrollPosition = window.pageYOffset;
-                document.body.style.overflow = 'hidden';
-                document.body.style.position = 'fixed';
-                document.body.style.top = `-${this.scrollPosition}px`;
-                document.body.style.width = '100%';
-            }
+            // Don't disable body scroll - let keyboard work naturally
+            // Just ensure the chat window stays positioned correctly
         }
 
         enableBodyScroll() {
-            if (this.isMobile) {
-                // Re-enable body scroll
-                document.body.style.overflow = '';
-                document.body.style.position = '';
-                document.body.style.top = '';
-                document.body.style.width = '';
-                
-                // Restore scroll position
-                if (this.scrollPosition !== undefined) {
-                    window.scrollTo(0, this.scrollPosition);
-                }
-            }
+            // Nothing to do since we're not disabling scroll
         }
 
         connect(webhookUrl) {
