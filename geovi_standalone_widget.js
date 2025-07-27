@@ -1,6 +1,6 @@
 /*!
- * Geovi Chat Widget v1.0
- * AI Assistant pentru sisteme de încălzire
+ * Geovi Chat Widget v2.0 - n8n Chat Agent Compatible
+ * AI Assistant pentru sisteme de încălzire - Optimizat pentru n8n
  * © 2025 Crego.ro
  */
 
@@ -12,7 +12,7 @@
         return;
     }
 
-    // CSS Styles - injected dynamically
+    // CSS Styles - same as before
     const CSS_STYLES = `
         /* Geovi Chat Widget Styles */
         .geovi-chat-container {
@@ -485,7 +485,7 @@
         </div>
     `;
 
-    // Main Widget Class
+    // Main Widget Class - ADAPTED FOR N8N CHAT AGENT
     class GeoviChatWidget {
         constructor(options = {}) {
             this.options = {
@@ -514,12 +514,12 @@
             // Show greeting
             this.showGreeting();
 
-            // Connect to webhook if provided
+            // Connect to n8n chat endpoint
             if (this.options.webhook) {
                 this.connect(this.options.webhook);
             }
 
-            console.log('🔥 Geovi Chat Widget initialized');
+            console.log('🔥 Geovi Chat Widget initialized for n8n');
         }
 
         injectCSS() {
@@ -595,7 +595,7 @@
         connect(webhookUrl) {
             this.options.webhook = webhookUrl;
             this.isConnected = true;
-            console.log('🔥 Geovi connected to:', webhookUrl);
+            console.log('🔥 Geovi connected to n8n chat:', webhookUrl);
         }
 
         async sendMessage() {
@@ -616,35 +616,54 @@
             const loadingElement = this.showLoading();
 
             try {
+                // N8N Chat Agent format
+                const payload = {
+                    action: 'sendMessage',
+                    sessionId: this.sessionId,
+                    chatInput: message
+                };
+
+                console.log('Sending to n8n:', payload);
+
                 const response = await fetch(this.options.webhook, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        message: message,
-                        sessionId: this.sessionId,
-                        timestamp: new Date().toISOString()
-                    })
+                    body: JSON.stringify(payload)
                 });
 
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
                 const data = await response.json();
+                console.log('n8n Response:', data);
                 
-                // Remove loading and add bot response
+                // Remove loading
                 loadingElement.remove();
                 
-                // Handle different response formats
-                let botMessage = data.response || data.message || 'Îmi pare rău, am o problemă tehnică. Te rog încearcă din nou.';
+                // Handle n8n chat response format
+                let botMessage = '';
+                
+                if (data.output) {
+                    botMessage = data.output;
+                } else if (data.response) {
+                    botMessage = data.response;
+                } else if (data.message) {
+                    botMessage = data.message;
+                } else if (typeof data === 'string') {
+                    botMessage = data;
+                } else {
+                    botMessage = 'Am primit răspunsul, dar nu îl pot afișa corect.';
+                }
+                
                 this.addMessage(botMessage, 'bot');
                 
             } catch (error) {
-                console.error('Geovi error:', error);
+                console.error('Geovi n8n error:', error);
                 loadingElement.remove();
-                this.addMessage('Îmi pare rău, am o problemă de conexiune. Te rog încearcă din nou în câteva secunde.', 'bot');
+                this.addMessage('Îmi pare rău, am o problemă de conexiune cu sistemul AI. Te rog încearcă din nou.', 'bot');
             }
 
             this.sendBtn.disabled = false;
@@ -682,7 +701,7 @@
         }
 
         generateSessionId() {
-            return 'geovi-session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            return 'geovi-n8n-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
         }
 
         // Public methods
@@ -728,14 +747,5 @@
             window.Geovi.init(webhook);
         }
     });
-    window.addEventListener('beforeunload', function() {
-    if (conversationStarted && messageCount > 2) {
-        // Trimite conversația când se închide pagina
-        navigator.sendBeacon(webhookUrl + '/end-session', JSON.stringify({
-            action: 'session_end',
-            conversation: getAllMessages(),
-            sessionId: sessionId
-        }));
-    }
-});
+
 })();
