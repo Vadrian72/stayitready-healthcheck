@@ -1,146 +1,150 @@
 /*!
- * Geovi Chat Widget v3.0 - Fresh Start
- * AI Assistant pentru sisteme de încălzire - Optimizat pentru n8n
+ * Geovi Chat Widget v5.0 - Hauzen Style
+ * Sidebar pe desktop + Full-screen app pe mobile
  * © 2025 Crego.ro
  */
 
 (function() {
     'use strict';
 
-    // Prevent multiple initialization
     if (window.GeoviChatWidget) {
         return;
     }
 
-    // CSS Styles - FRESH START
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isTablet = /(iPad|tablet)/i.test(navigator.userAgent);
+
     const CSS_STYLES = `
-        /* RESET COMPLET */
-        .geovi-widget-v3, 
-        .geovi-widget-v3 *,
-        .geovi-widget-v3 *::before,
-        .geovi-widget-v3 *::after {
-            all: unset !important;
+        /* RESET */
+        .geovi-widget-v5, 
+        .geovi-widget-v5 *,
+        .geovi-widget-v5 *::before,
+        .geovi-widget-v5 *::after {
             box-sizing: border-box !important;
-            font-family: system-ui, -apple-system, sans-serif !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
         }
 
-        /* WIDGET CONTAINER - SIMPLU ȘI CLAR */
-        .geovi-widget-v3 {
+        /* WIDGET CONTAINER */
+        .geovi-widget-v5 {
             position: fixed !important;
-            bottom: 30px !important;
-            right: 30px !important;
-            width: 90px !important;
-            height: 90px !important;
+            bottom: 25px !important;
+            right: 25px !important;
             z-index: 999999 !important;
-            display: block !important;
         }
 
-        /* BUTTON PRINCIPAL */
-        .geovi-btn-v3 {
-            position: relative !important;
-            width: 90px !important;
-            height: 90px !important;
-            cursor: pointer !important;
-            display: block !important;
-            transition: transform 0.2s ease !important;
-        }
-
-        .geovi-btn-v3:active {
-            transform: scale(0.95) !important;
-        }
-
-        /* SMILEY FACE */
-        .geovi-face-v3 {
-            width: 80px !important;
-            height: 80px !important;
-            background: #FFD700 !important;
-            border: 4px solid #000 !important;
+        /* CHAT BUBBLE - Hauzen Style */
+        .geovi-bubble-v5 {
+            width: 64px !important;
+            height: 64px !important;
+            background: linear-gradient(135deg, #00ff99, #00cc7a) !important;
             border-radius: 50% !important;
-            position: absolute !important;
-            top: 5px !important;
-            left: 5px !important;
             display: flex !important;
-            flex-direction: column !important;
             align-items: center !important;
             justify-content: center !important;
+            cursor: pointer !important;
+            box-shadow: 0 8px 24px rgba(0, 255, 153, 0.3) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            border: none !important;
+            position: relative !important;
         }
 
-        /* EYES */
-        .geovi-eyes-v3 {
-            display: flex !important;
-            gap: 14px !important;
-            margin-bottom: 8px !important;
+        .geovi-bubble-v5:hover {
+            transform: scale(1.05) !important;
+            box-shadow: 0 12px 32px rgba(0, 255, 153, 0.4) !important;
         }
 
-        .geovi-eye-v3 {
-            width: 14px !important;
-            height: 14px !important;
-            background: #000 !important;
+        .geovi-bubble-v5:active {
+            transform: scale(0.98) !important;
+        }
+
+        /* FIRE ICON */
+        .geovi-fire-v5 {
+            font-size: 28px !important;
+            line-height: 1 !important;
+        }
+
+        /* PULSE ANIMATION */
+        @keyframes geovi-pulse-v5 {
+            0%, 100% { 
+                box-shadow: 0 8px 24px rgba(0, 255, 153, 0.3);
+            }
+            50% { 
+                box-shadow: 0 8px 32px rgba(0, 255, 153, 0.5);
+            }
+        }
+
+        .geovi-bubble-v5.pulse {
+            animation: geovi-pulse-v5 2s infinite !important;
+        }
+
+        /* NOTIFICATION DOT */
+        .geovi-notification-v5 {
+            position: absolute !important;
+            top: -2px !important;
+            right: -2px !important;
+            width: 16px !important;
+            height: 16px !important;
+            background: #ff4757 !important;
             border-radius: 50% !important;
+            border: 2px solid white !important;
+            display: none !important;
         }
 
-        /* SMILE */
-        .geovi-mouth-v3 {
-            width: 30px !important;
-            height: 15px !important;
-            border: 3px solid #000 !important;
-            border-top: none !important;
-            border-radius: 0 0 30px 30px !important;
-        }
-
-        /* BUBBLE */
-        .geovi-bubble-v3 {
-            position: absolute !important;
-            bottom: 100px !important;
-            right: -50px !important;
-            width: 190px !important;
-            background: white !important;
-            border: 3px solid #FFD700 !important;
-            border-radius: 15px !important;
-            padding: 12px 15px !important;
-            font-size: 14px !important;
-            color: #333 !important;
-            text-align: center !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
-            opacity: 0 !important;
-            transform: translateY(20px) !important;
-            transition: all 0.3s ease !important;
-            pointer-events: none !important;
+        .geovi-notification-v5.show {
             display: block !important;
+            animation: geovi-bounce-v5 0.6s ease !important;
         }
 
-        .geovi-bubble-v3.visible {
+        @keyframes geovi-bounce-v5 {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-4px);
+            }
+            60% {
+                transform: translateY(-2px);
+            }
+        }
+
+        /* WELCOME MESSAGE */
+        .geovi-welcome-v5 {
+            position: absolute !important;
+            bottom: 80px !important;
+            right: 0 !important;
+            width: 280px !important;
+            background: white !important;
+            border: 1px solid #e1e5e9 !important;
+            border-radius: 12px !important;
+            padding: 16px !important;
+            font-size: 14px !important;
+            color: #2c3e50 !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+            opacity: 0 !important;
+            transform: translateY(10px) scale(0.95) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            z-index: 1000000 !important;
+        }
+
+        .geovi-welcome-v5.show {
             opacity: 1 !important;
-            transform: translateY(0) !important;
+            transform: translateY(0) scale(1) !important;
         }
 
-        /* Bubble arrow */
-        .geovi-bubble-v3::after {
+        .geovi-welcome-v5::after {
             content: '' !important;
             position: absolute !important;
-            bottom: -10px !important;
-            left: 70px !important;
+            bottom: -8px !important;
+            right: 24px !important;
             width: 0 !important;
             height: 0 !important;
-            border-left: 10px solid transparent !important;
-            border-right: 10px solid transparent !important;
-            border-top: 10px solid white !important;
+            border-left: 8px solid transparent !important;
+            border-right: 8px solid transparent !important;
+            border-top: 8px solid white !important;
         }
 
-        .geovi-bubble-v3::before {
-            content: '' !important;
-            position: absolute !important;
-            bottom: -13px !important;
-            left: 67px !important;
-            width: 0 !important;
-            height: 0 !important;
-            border-left: 13px solid transparent !important;
-            border-right: 13px solid transparent !important;
-            border-top: 13px solid #FFD700 !important;
-        }
-
-        /* CHAT WINDOW - FULL SCREEN */
-        .geovi-chat-v3 {
+        /* MOBILE STYLES - Full Screen App */
+        .geovi-chat-v5 {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
@@ -148,42 +152,76 @@
             bottom: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
-            background: white !important;
-            z-index: 1000000 !important;
+            background: #f8f9fa !important;
+            z-index: 1000001 !important;
             display: none !important;
             flex-direction: column !important;
+            transform: translateX(100%) !important;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            /* Prevent zoom and scroll */
+            touch-action: manipulation !important;
+            -webkit-user-select: none !important;
+            user-select: none !important;
         }
 
-        .geovi-chat-v3.open {
+        .geovi-chat-v5.open {
             display: flex !important;
+            transform: translateX(0) !important;
         }
 
-        /* HEADER */
-        .geovi-header-v3 {
-            background: linear-gradient(135deg, #FFD700, #FFA500) !important;
-            padding: 20px !important;
+        /* HEADER - Mobile App Style */
+        .geovi-header-v5 {
+            background: white !important;
+            padding: 16px 20px !important;
             display: flex !important;
             justify-content: space-between !important;
             align-items: center !important;
-            border-bottom: 2px solid #000 !important;
             flex-shrink: 0 !important;
+            border-bottom: 1px solid #e1e5e9 !important;
+            /* Safe area for notch */
+            padding-top: max(16px, env(safe-area-inset-top)) !important;
         }
 
-        .geovi-title-v3 {
-            font-size: 20px !important;
-            font-weight: bold !important;
-            color: #333 !important;
-            margin: 0 !important;
-        }
-
-        .geovi-close-v3 {
+        .geovi-avatar-v5 {
             width: 40px !important;
             height: 40px !important;
-            border: 2px solid #000 !important;
+            background: linear-gradient(135deg, #00ff99, #00cc7a) !important;
             border-radius: 50% !important;
-            background: none !important;
-            font-size: 24px !important;
-            color: #000 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 18px !important;
+            margin-right: 12px !important;
+        }
+
+        .geovi-header-info-v5 {
+            flex: 1 !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+
+        .geovi-title-v5 {
+            font-size: 18px !important;
+            font-weight: 600 !important;
+            color: #2c3e50 !important;
+            margin: 0 !important;
+            line-height: 1.2 !important;
+        }
+
+        .geovi-status-v5 {
+            font-size: 13px !important;
+            color: #7f8c8d !important;
+            margin-top: 2px !important;
+        }
+
+        .geovi-close-v5 {
+            width: 40px !important;
+            height: 40px !important;
+            border: none !important;
+            border-radius: 50% !important;
+            background: #f1f3f4 !important;
+            font-size: 18px !important;
+            color: #5f6368 !important;
             cursor: pointer !important;
             display: flex !important;
             align-items: center !important;
@@ -191,398 +229,476 @@
             transition: all 0.2s ease !important;
         }
 
-        .geovi-close-v3:active {
-            background: #000 !important;
-            color: #FFD700 !important;
+        .geovi-close-v5:active {
+            background: #e8eaed !important;
+            transform: scale(0.95) !important;
         }
 
-        /* MESSAGES AREA */
-        .geovi-messages-v3 {
+        /* MESSAGES AREA - Hauzen Style */
+        .geovi-messages-v5 {
             flex: 1 !important;
-            padding: 20px !important;
+            padding: 16px !important;
             overflow-y: auto !important;
-            background: #f8f8f8 !important;
             display: flex !important;
             flex-direction: column !important;
-            gap: 15px !important;
+            gap: 16px !important;
+            -webkit-overflow-scrolling: touch !important;
+            scroll-behavior: smooth !important;
         }
 
-        /* MESSAGE BUBBLES */
-        .geovi-msg-v3 {
-            max-width: 80% !important;
-            padding: 15px 18px !important;
-            border-radius: 20px !important;
-            font-size: 16px !important;
+        /* MESSAGE BUBBLES - Hauzen Style */
+        .geovi-msg-v5 {
+            max-width: 85% !important;
+            padding: 12px 16px !important;
+            border-radius: 16px !important;
+            font-size: 15px !important;
             line-height: 1.4 !important;
-            border: 2px solid #ddd !important;
             word-wrap: break-word !important;
             display: block !important;
+            position: relative !important;
         }
 
-        .geovi-msg-v3.bot {
+        .geovi-msg-v5.bot {
             background: white !important;
-            border-color: #FFD700 !important;
-            color: #333 !important;
+            color: #2c3e50 !important;
             align-self: flex-start !important;
+            border-bottom-left-radius: 4px !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+            border: 1px solid #e1e5e9 !important;
         }
 
-        .geovi-msg-v3.user {
-            background: #FFD700 !important;
-            border-color: #000 !important;
-            color: #333 !important;
+        .geovi-msg-v5.user {
+            background: linear-gradient(135deg, #00ff99, #00cc7a) !important;
+            color: #2c3e50 !important;
             align-self: flex-end !important;
+            border-bottom-right-radius: 4px !important;
             font-weight: 500 !important;
         }
 
-        /* INPUT AREA */
-        .geovi-input-v3 {
-            padding: 20px !important;
-            border-top: 2px solid #FFD700 !important;
+        /* INPUT AREA - Fixed Bottom */
+        .geovi-input-v5 {
+            padding: 16px 20px !important;
             background: white !important;
+            border-top: 1px solid #e1e5e9 !important;
             display: flex !important;
             gap: 12px !important;
-            align-items: center !important;
+            align-items: flex-end !important;
             flex-shrink: 0 !important;
-            min-height: 90px !important;
-            height: 90px !important;
+            position: relative !important;
+            /* Safe area for home indicator */
+            padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
         }
 
-        .geovi-field-v3 {
+        .geovi-input-v5.keyboard-open {
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            z-index: 1000002 !important;
+        }
+
+        .geovi-field-v5 {
             flex: 1 !important;
-            padding: 15px 18px !important;
-            border: 2px solid #FFD700 !important;
-            border-radius: 25px !important;
+            min-height: 44px !important;
+            max-height: 120px !important;
+            padding: 12px 16px !important;
+            border: 1px solid #e1e5e9 !important;
+            border-radius: 22px !important;
             font-size: 16px !important;
             outline: none !important;
-            background: white !important;
-            color: #333 !important;
-            display: block !important;
-            width: 100% !important;
-            height: 50px !important;
-            line-height: normal !important;
-            appearance: none !important;
+            background: #f8f9fa !important;
+            color: #2c3e50 !important;
+            resize: none !important;
+            font-family: inherit !important;
+            /* Prevent zoom on iOS */
             -webkit-appearance: none !important;
+            appearance: none !important;
         }
 
-        .geovi-field-v3:focus {
-            border-color: #000 !important;
+        .geovi-field-v5:focus {
+            border-color: #00ff99 !important;
+            background: white !important;
         }
 
-        .geovi-send-v3 {
-            padding: 15px 20px !important;
-            background: #FFD700 !important;
-            border: 2px solid #000 !important;
-            border-radius: 25px !important;
-            font-size: 16px !important;
-            font-weight: bold !important;
-            color: #333 !important;
+        .geovi-field-v5::placeholder {
+            color: #95a5a6 !important;
+        }
+
+        .geovi-send-v5 {
+            width: 44px !important;
+            height: 44px !important;
+            background: linear-gradient(135deg, #00ff99, #00cc7a) !important;
+            border: none !important;
+            border-radius: 50% !important;
+            font-size: 18px !important;
+            color: #2c3e50 !important;
             cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
             transition: all 0.2s ease !important;
-            display: block !important;
-            min-width: 80px !important;
-            height: 50px !important;
             flex-shrink: 0 !important;
         }
 
-        .geovi-send-v3:active {
-            background: #000 !important;
-            color: #FFD700 !important;
+        .geovi-send-v5:active {
+            transform: scale(0.95) !important;
         }
 
-        .geovi-send-v3:disabled {
+        .geovi-send-v5:disabled {
             opacity: 0.5 !important;
             cursor: not-allowed !important;
         }
 
-        /* LOADING */
-        .geovi-loading-v3 {
+        /* LOADING ANIMATION */
+        .geovi-loading-v5 {
             display: flex !important;
-            gap: 4px !important;
-            padding: 15px 18px !important;
-            justify-content: center !important;
+            gap: 6px !important;
+            padding: 12px 16px !important;
+            justify-content: flex-start !important;
         }
 
-        .geovi-dot-v3 {
+        .geovi-dot-v5 {
             width: 8px !important;
             height: 8px !important;
-            background: #ccc !important;
+            background: #bdc3c7 !important;
             border-radius: 50% !important;
-            animation: geovi-bounce-v3 1.4s infinite ease-in-out !important;
+            animation: geovi-loading-v5 1.4s infinite ease-in-out !important;
         }
 
-        .geovi-dot-v3:nth-child(1) { animation-delay: -0.32s !important; }
-        .geovi-dot-v3:nth-child(2) { animation-delay: -0.16s !important; }
+        .geovi-dot-v5:nth-child(1) { animation-delay: -0.32s !important; }
+        .geovi-dot-v5:nth-child(2) { animation-delay: -0.16s !important; }
+        .geovi-dot-v5:nth-child(3) { animation-delay: 0s !important; }
 
-        @keyframes geovi-bounce-v3 {
-            0%, 80%, 100% { transform: scale(0) !important; }
-            40% { transform: scale(1) !important; }
+        @keyframes geovi-loading-v5 {
+            0%, 80%, 100% { 
+                transform: scale(0.6) !important; 
+                opacity: 0.4 !important;
+            }
+            40% { 
+                transform: scale(1) !important; 
+                opacity: 1 !important;
+            }
         }
 
-        /* DESKTOP STYLES */
-        @media (min-width: 1200px) {
-            .geovi-widget-v3 {
-                width: 70px !important;
-                height: 70px !important;
-            }
-
-            .geovi-btn-v3 {
-                width: 70px !important;
-                height: 70px !important;
-            }
-
-            .geovi-face-v3 {
-                width: 60px !important;
-                height: 60px !important;
-                border: 3px solid #000 !important;
-            }
-
-            .geovi-eyes-v3 {
-                gap: 10px !important;
-                margin-bottom: 6px !important;
-            }
-
-            .geovi-eye-v3 {
-                width: 10px !important;
-                height: 10px !important;
-            }
-
-            .geovi-mouth-v3 {
-                width: 20px !important;
-                height: 10px !important;
-                border: 2px solid #000 !important;
-                border-radius: 0 0 20px 20px !important;
-            }
-
-            .geovi-chat-v3 {
-                position: absolute !important;
-                top: auto !important;
-                bottom: 80px !important;
+        /* DESKTOP STYLES - Right Sidebar */
+        @media (min-width: 768px) {
+            .geovi-chat-v5 {
+                position: fixed !important;
+                top: 0 !important;
                 right: 0 !important;
                 left: auto !important;
-                width: 380px !important;
-                height: 500px !important;
-                border-radius: 15px !important;
-                border: 3px solid #FFD700 !important;
+                bottom: 0 !important;
+                width: 400px !important;
+                height: 100vh !important;
+                transform: translateX(100%) !important;
+                box-shadow: -8px 0 32px rgba(0, 0, 0, 0.12) !important;
+                border-left: 1px solid #e1e5e9 !important;
+                touch-action: auto !important;
+                -webkit-user-select: text !important;
+                user-select: text !important;
             }
 
-            .geovi-bubble-v3 {
-                bottom: 10px !important;
-                right: 80px !important;
-                width: 250px !important;
-                text-align: left !important;
+            .geovi-chat-v5.open {
+                transform: translateX(0) !important;
             }
 
-            .geovi-bubble-v3::after {
+            .geovi-header-v5 {
+                padding-top: 20px !important;
+                padding-bottom: 20px !important;
+            }
+
+            .geovi-messages-v5 {
+                padding: 20px !important;
+            }
+
+            .geovi-input-v5 {
+                padding: 20px !important;
+                padding-bottom: 20px !important;
+            }
+
+            .geovi-input-v5.keyboard-open {
+                position: relative !important;
+                bottom: auto !important;
+            }
+
+            .geovi-msg-v5 {
+                max-width: 90% !important;
+                font-size: 14px !important;
+            }
+
+            .geovi-welcome-v5 {
+                width: 320px !important;
+                right: 420px !important;
+                bottom: 100px !important;
+            }
+
+            .geovi-welcome-v5::after {
                 bottom: 15px !important;
-                right: -8px !important;
+                right: -6px !important;
                 left: auto !important;
-                border-top: 8px solid transparent !important;
-                border-bottom: 8px solid transparent !important;
-                border-left: 8px solid white !important;
+                border-top: 6px solid transparent !important;
+                border-bottom: 6px solid transparent !important;
+                border-left: 6px solid white !important;
                 border-right: none !important;
             }
+        }
 
-            .geovi-bubble-v3::before {
-                bottom: 13px !important;
-                right: -11px !important;
-                left: auto !important;
-                border-top: 11px solid transparent !important;
-                border-bottom: 11px solid transparent !important;
-                border-left: 11px solid #FFD700 !important;
-                border-right: none !important;
+        /* PREVENT BODY SCROLL WHEN CHAT IS OPEN */
+        body.geovi-chat-open-v5 {
+            overflow: hidden !important;
+            height: 100vh !important;
+            position: fixed !important;
+            width: 100% !important;
+        }
+
+        /* DESKTOP: Don't prevent body scroll */
+        @media (min-width: 768px) {
+            body.geovi-chat-open-v5 {
+                overflow: auto !important;
+                height: auto !important;
+                position: static !important;
+                width: auto !important;
             }
+        }
+
+        /* ACCESSIBILITY */
+        .geovi-widget-v5 *:focus {
+            outline: 2px solid #00ff99 !important;
+            outline-offset: 2px !important;
+        }
+
+        /* SMOOTH SCROLLING */
+        .geovi-messages-v5 {
+            scroll-behavior: smooth !important;
         }
     `;
 
-    // Widget HTML Template
     const WIDGET_HTML = `
-        <div class="geovi-bubble-v3" id="geovi-bubble">
+        <div class="geovi-welcome-v5" id="geovi-welcome">
             Salut! Sunt Geovi și te ajut cu încălzirea! 🔥
         </div>
         
-        <div class="geovi-btn-v3" id="geovi-btn">
-            <div class="geovi-face-v3">
-                <div class="geovi-eyes-v3">
-                    <div class="geovi-eye-v3"></div>
-                    <div class="geovi-eye-v3"></div>
-                </div>
-                <div class="geovi-mouth-v3"></div>
-            </div>
-        </div>
+        <button class="geovi-bubble-v5 pulse" id="geovi-bubble" aria-label="Deschide chat cu Geovi">
+            <div class="geovi-notification-v5" id="geovi-notification"></div>
+            <span class="geovi-fire-v5">🔥</span>
+        </button>
 
-        <div class="geovi-chat-v3" id="geovi-chat">
-            <div class="geovi-header-v3">
-                <h3 class="geovi-title-v3">🔥 Geovi - Asistent AI</h3>
-                <button class="geovi-close-v3" id="geovi-close">&times;</button>
+        <div class="geovi-chat-v5" id="geovi-chat" role="dialog" aria-labelledby="geovi-title">
+            <div class="geovi-header-v5">
+                <div class="geovi-header-info-v5">
+                    <div class="geovi-avatar-v5">🔥</div>
+                    <div>
+                        <h3 class="geovi-title-v5" id="geovi-title">Geovi</h3>
+                        <div class="geovi-status-v5">Asistent AI pentru încălzire</div>
+                    </div>
+                </div>
+                <button class="geovi-close-v5" id="geovi-close" aria-label="Închide chat">&times;</button>
             </div>
-            <div class="geovi-messages-v3" id="geovi-messages">
-                <div class="geovi-msg-v3 bot">
-                    Salut! Sunt Geovi, asistentul tău AI! 🔥<br><br>
-                    Te pot ajuta cu:
-                    <br>• Radiatoare și calorifere
-                    <br>• Cazane și centrale termice  
-                    <br>• Sisteme de încălzire
-                    <br>• Sfaturi tehnice
-                    <br><br>
+            
+            <div class="geovi-messages-v5" id="geovi-messages" role="log" aria-live="polite">
+                <div class="geovi-msg-v5 bot">
+                    Salut! Sunt Geovi, asistentul tău AI pentru încălzire! 🔥<br><br>
+                    Te pot ajuta cu:<br>
+                    • Radiatoare și calorifere<br>
+                    • Cazane și centrale termice<br>
+                    • Sisteme de încălzire<br>
+                    • Sfaturi tehnice și economisire<br>
+                    • Configurări personalizate<br><br>
                     Cu ce te pot ajuta astăzi?
                 </div>
             </div>
-            <div class="geovi-input-v3" id="geovi-input-area">
-                <input type="text" class="geovi-field-v3" id="geovi-field" placeholder="Scrie mesajul tău aici..." />
-                <button class="geovi-send-v3" id="geovi-send">Trimite</button>
+            
+            <div class="geovi-input-v5" id="geovi-input">
+                <textarea 
+                    class="geovi-field-v5" 
+                    id="geovi-field" 
+                    placeholder="Scrie mesajul tău aici..." 
+                    rows="1"
+                    aria-label="Mesajul tău"
+                ></textarea>
+                <button class="geovi-send-v5" id="geovi-send" aria-label="Trimite mesaj">➤</button>
             </div>
         </div>
     `;
 
-    // Main Widget Class - FUNCȚIONALITATEA N8N PĂSTRATĂ IDENTICĂ
     class GeoviChatWidget {
         constructor(options = {}) {
             this.options = {
                 webhook: options.webhook || '',
-                position: options.position || 'bottom-right',
                 greeting: options.greeting || 'Salut! Sunt Geovi și te ajut cu încălzirea! 🔥',
                 ...options
             };
 
             this.isConnected = false;
             this.sessionId = this.generateSessionId();
+            this.keyboardOpen = false;
+            this.originalViewportHeight = window.innerHeight;
             
             this.init();
         }
 
         init() {
-            // Remove old version if exists
             this.cleanup();
-            
-            // Inject CSS
             this.injectCSS();
-            
-            // Create container
             this.createContainer();
-            
-            // Bind events
             this.bindEvents();
-            
-            // Show greeting
+            this.setupKeyboardHandling();
             this.showGreeting();
 
-            // Connect to n8n chat endpoint
             if (this.options.webhook) {
                 this.connect(this.options.webhook);
             }
 
-            console.log('🔥 Geovi Chat Widget v3.0 - Fresh Start!');
+            console.log('🔥 Geovi Chat Widget v5.0 - Hauzen Style!');
         }
 
         cleanup() {
-            // Remove old versions
-            const oldContainer = document.getElementById('geovi-chat-container');
+            const oldContainer = document.getElementById('geovi-widget-v5');
             if (oldContainer) oldContainer.remove();
             
-            const oldStyles = document.getElementById('geovi-chat-styles');
+            const oldStyles = document.getElementById('geovi-styles-v5');
             if (oldStyles) oldStyles.remove();
+
+            document.body.classList.remove('geovi-chat-open-v5');
         }
 
         injectCSS() {
             const style = document.createElement('style');
-            style.id = 'geovi-styles-v3';
+            style.id = 'geovi-styles-v5';
             style.textContent = CSS_STYLES;
             document.head.appendChild(style);
         }
 
         createContainer() {
             this.container = document.createElement('div');
-            this.container.id = 'geovi-widget';
-            this.container.className = 'geovi-widget-v3';
+            this.container.id = 'geovi-widget-v5';
+            this.container.className = 'geovi-widget-v5';
             this.container.innerHTML = WIDGET_HTML;
 
             document.body.appendChild(this.container);
 
             // Get elements
-            this.btn = document.getElementById('geovi-btn');
             this.bubble = document.getElementById('geovi-bubble');
+            this.welcome = document.getElementById('geovi-welcome');
             this.chat = document.getElementById('geovi-chat');
             this.messages = document.getElementById('geovi-messages');
             this.field = document.getElementById('geovi-field');
             this.send = document.getElementById('geovi-send');
             this.close = document.getElementById('geovi-close');
-            this.inputArea = document.getElementById('geovi-input-area');
-
-            // FORȚEZ din nou input-ul să fie vizibil
-            if (this.inputArea) {
-                this.inputArea.style.cssText = `
-                    position: absolute !important;
-                    bottom: 0 !important;
-                    left: 0 !important;
-                    right: 0 !important;
-                    height: 70px !important;
-                    background: #FF0000 !important;
-                    z-index: 999999 !important;
-                    display: flex !important;
-                    padding: 15px 20px !important;
-                    gap: 12px !important;
-                    align-items: center !important;
-                    border-top: 2px solid #FFD700 !important;
-                `;
-            }
-            
-            if (this.field) {
-                this.field.style.cssText = `
-                    flex: 1 !important;
-                    height: 45px !important;
-                    border: 2px solid #FFD700 !important;
-                    background: white !important;
-                    border-radius: 25px !important;
-                    padding: 12px 16px !important;
-                    font-size: 16px !important;
-                    color: #333 !important;
-                    outline: none !important;
-                `;
-            }
-
-            if (this.send) {
-                this.send.style.cssText = `
-                    height: 45px !important;
-                    padding: 12px 18px !important;
-                    background: #FFD700 !important;
-                    border: 2px solid #000 !important;
-                    border-radius: 25px !important;
-                    font-size: 15px !important;
-                    font-weight: bold !important;
-                    color: #333 !important;
-                    min-width: 70px !important;
-                `;
-            }
-
-            console.log('🔥 Input area FORCED with inline styles!');
+            this.inputArea = document.getElementById('geovi-input');
+            this.notification = document.getElementById('geovi-notification');
         }
 
         bindEvents() {
-            this.btn.addEventListener('click', () => this.toggleChat());
+            this.bubble.addEventListener('click', () => this.toggleChat());
             this.close.addEventListener('click', () => this.closeChat());
             this.send.addEventListener('click', () => this.sendMessage());
-            this.field.addEventListener('keypress', (e) => {
+            
+            this.field.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     this.sendMessage();
                 }
             });
+
+            this.field.addEventListener('input', () => this.autoResize());
+
+            // Hide welcome when clicking elsewhere
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.geovi-widget-v5')) {
+                    this.hideWelcome();
+                }
+            });
+
+            // ESC key to close
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && this.chat.classList.contains('open')) {
+                    this.closeChat();
+                }
+            });
+        }
+
+        setupKeyboardHandling() {
+            if (!isMobile) return;
+
+            let initialHeight = window.innerHeight;
+            
+            const handleResize = () => {
+                const currentHeight = window.innerHeight;
+                const heightDiff = initialHeight - currentHeight;
+                
+                if (heightDiff > 150) {
+                    // Keyboard open
+                    this.keyboardOpen = true;
+                    this.inputArea.classList.add('keyboard-open');
+                    this.adjustForKeyboard(true);
+                } else {
+                    // Keyboard closed
+                    this.keyboardOpen = false;
+                    this.inputArea.classList.remove('keyboard-open');
+                    this.adjustForKeyboard(false);
+                }
+            };
+
+            window.addEventListener('resize', handleResize);
+
+            // iOS Visual Viewport API support
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', () => {
+                    const keyboardHeight = window.innerHeight - window.visualViewport.height;
+                    if (keyboardHeight > 0 && this.chat.classList.contains('open')) {
+                        this.inputArea.style.transform = `translateY(-${keyboardHeight}px)`;
+                    } else {
+                        this.inputArea.style.transform = '';
+                    }
+                });
+            }
+
+            // Focus handling
+            this.field.addEventListener('focus', () => {
+                setTimeout(() => {
+                    this.scrollToBottom();
+                }, 300);
+            });
+        }
+
+        adjustForKeyboard(isOpen) {
+            if (isOpen) {
+                this.messages.style.paddingBottom = '100px';
+                setTimeout(() => this.scrollToBottom(), 100);
+            } else {
+                this.messages.style.paddingBottom = window.innerWidth >= 768 ? '20px' : '16px';
+            }
+        }
+
+        autoResize() {
+            this.field.style.height = 'auto';
+            const scrollHeight = this.field.scrollHeight;
+            const maxHeight = 120;
+            this.field.style.height = Math.min(scrollHeight, maxHeight) + 'px';
         }
 
         showGreeting() {
             setTimeout(() => {
-                this.bubble.classList.add('visible');
+                this.welcome.classList.add('show');
+                this.notification.classList.add('show');
             }, 2000);
 
             setTimeout(() => {
-                this.bubble.classList.remove('visible');
+                this.hideWelcome();
             }, 8000);
         }
 
+        hideWelcome() {
+            this.welcome.classList.remove('show');
+        }
+
         toggleChat() {
-            this.bubble.classList.remove('visible');
-            const isOpen = this.chat.classList.contains('open');
+            this.hideWelcome();
+            this.bubble.classList.remove('pulse');
+            this.notification.classList.remove('show');
             
+            const isOpen = this.chat.classList.contains('open');
             if (isOpen) {
                 this.closeChat();
             } else {
@@ -592,49 +708,65 @@
 
         openChat() {
             this.chat.classList.add('open');
-            document.body.style.overflow = 'hidden';
+            
+            if (isMobile && !isTablet) {
+                document.body.classList.add('geovi-chat-open-v5');
+            }
+
             setTimeout(() => {
                 this.field.focus();
-            }, 100);
+                this.scrollToBottom();
+            }, 400);
         }
 
         closeChat() {
             this.chat.classList.remove('open');
-            document.body.style.overflow = '';
+            document.body.classList.remove('geovi-chat-open-v5');
+            
+            // Reset keyboard handling
+            this.inputArea.classList.remove('keyboard-open');
+            this.inputArea.style.transform = '';
+            this.messages.style.paddingBottom = window.innerWidth >= 768 ? '20px' : '16px';
+        }
+
+        scrollToBottom() {
+            setTimeout(() => {
+                this.messages.scrollTop = this.messages.scrollHeight;
+            }, 50);
         }
 
         connect(webhookUrl) {
             this.options.webhook = webhookUrl;
             this.isConnected = true;
-            console.log('🔥 Geovi connected to n8n chat:', webhookUrl);
+            console.log('🔥 Geovi connected to webhook:', webhookUrl);
         }
 
         async sendMessage() {
-            if (!this.isConnected || !this.options.webhook) {
-                this.addMessage('Geovi nu este conectat încă. Te rog să încerci mai târziu.', 'bot');
+            const message = this.field.value.trim();
+            if (!message || !this.isConnected) {
+                if (!this.isConnected) {
+                    this.addMessage('Sistemul nu este conectat încă. Te rog să încerci mai târziu.', 'bot');
+                }
                 return;
             }
-
-            const message = this.field.value.trim();
-            if (!message) return;
 
             // Add user message
             this.addMessage(message, 'user');
             this.field.value = '';
+            this.autoResize();
             this.send.disabled = true;
 
             // Show loading
             const loadingElement = this.showLoading();
 
             try {
-                // N8N Chat Agent format - PĂSTRAT IDENTIC
                 const payload = {
-                    action: 'sendMessage',
-                    sessionId: this.sessionId,
-                    chatInput: message
+                    message: message,
+                    timestamp: new Date().toISOString(),
+                    sessionId: this.sessionId
                 };
 
-                console.log('Sending to n8n:', payload);
+                console.log('🚀 Sending to webhook:', payload);
 
                 const response = await fetch(this.options.webhook, {
                     method: 'POST',
@@ -644,37 +776,32 @@
                     body: JSON.stringify(payload)
                 });
 
+                console.log('📡 Response status:', response.status);
+
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
                 const data = await response.json();
-                console.log('n8n Response:', data);
+                console.log('📥 Response data:', data);
                 
-                // Remove loading
                 loadingElement.remove();
                 
-                // Handle n8n chat response format - PĂSTRAT IDENTIC
-                let botMessage = '';
-                
-                if (data.output) {
-                    botMessage = data.output;
-                } else if (data.response) {
-                    botMessage = data.response;
-                } else if (data.message) {
-                    botMessage = data.message;
-                } else if (typeof data === 'string') {
+                let botMessage = data.response || data.output || data.message;
+                if (typeof data === 'string') {
                     botMessage = data;
-                } else {
-                    botMessage = 'Am primit răspunsul, dar nu îl pot afișa corect.';
+                }
+                
+                if (!botMessage) {
+                    botMessage = 'Am primit răspunsul, dar nu îl pot afișa corect. Te rog încearcă din nou.';
                 }
                 
                 this.addMessage(botMessage, 'bot');
                 
             } catch (error) {
-                console.error('Geovi n8n error:', error);
+                console.error('❌ Webhook error:', error);
                 loadingElement.remove();
-                this.addMessage('Îmi pare rău, am o problemă de conexiune cu sistemul AI. Te rog încearcă din nou.', 'bot');
+                this.addMessage('Ne pare rău, am o problemă de conexiune cu sistemul AI. Te rog încearcă din nou.', 'bot');
             }
 
             this.send.disabled = false;
@@ -683,68 +810,60 @@
 
         addMessage(message, sender) {
             const messageElement = document.createElement('div');
-            messageElement.className = `geovi-msg-v3 ${sender}`;
+            messageElement.className = `geovi-msg-v5 ${sender}`;
             
-            // Handle HTML content safely - PĂSTRAT IDENTIC
-            if (message.includes('<br>')) {
+            if (message.includes('<br>') || message.includes('<')) {
                 messageElement.innerHTML = message;
             } else {
                 messageElement.textContent = message;
             }
             
             this.messages.appendChild(messageElement);
-            this.messages.scrollTop = this.messages.scrollHeight;
+            this.scrollToBottom();
         }
 
         showLoading() {
             const loadingElement = document.createElement('div');
-            loadingElement.className = 'geovi-msg-v3 bot geovi-loading-v3';
+            loadingElement.className = 'geovi-msg-v5 bot';
             loadingElement.innerHTML = `
-                <div class="geovi-dot-v3"></div>
-                <div class="geovi-dot-v3"></div>
-                <div class="geovi-dot-v3"></div>
+                <div class="geovi-loading-v5">
+                    <div class="geovi-dot-v5"></div>
+                    <div class="geovi-dot-v5"></div>
+                    <div class="geovi-dot-v5"></div>
+                </div>
             `;
             
             this.messages.appendChild(loadingElement);
-            this.messages.scrollTop = this.messages.scrollHeight;
+            this.scrollToBottom();
             
             return loadingElement;
         }
 
         generateSessionId() {
-            return 'geovi-n8n-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            return 'geovi-hauzen-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
         }
 
-        // Public methods - PĂSTRATE IDENTIC
+        // Public API methods
         destroy() {
-            if (this.container) {
-                this.container.remove();
-            }
-            const styles = document.getElementById('geovi-styles-v3');
-            if (styles) {
-                styles.remove();
-            }
-            document.body.style.overflow = '';
+            this.cleanup();
         }
 
         setWebhook(url) {
             this.connect(url);
         }
 
-        openChat() {
-            this.bubble.classList.remove('visible');
-            this.chat.classList.add('open');
-            document.body.style.overflow = 'hidden';
-            setTimeout(() => {
-                this.field.focus();
-            }, 100);
+        showNotification() {
+            this.notification.classList.add('show');
+        }
+
+        hideNotification() {
+            this.notification.classList.remove('show');
         }
     }
 
-    // Global API - PĂSTRAT IDENTIC
+    // Global API
     window.GeoviChatWidget = GeoviChatWidget;
     
-    // Simple API for easy integration - PĂSTRAT IDENTIC
     window.Geovi = {
         init: function(options) {
             if (typeof options === 'string') {
@@ -754,12 +873,12 @@
         }
     };
 
-    // Auto-init if data attributes exist - PĂSTRAT IDENTIC
+    // Auto-init on DOM ready if data attributes exist
     document.addEventListener('DOMContentLoaded', function() {
         const script = document.querySelector('script[data-geovi-webhook]');
         if (script) {
             const webhook = script.getAttribute('data-geovi-webhook');
-            window.Geovi.init(webhook);
+            window.Geovi.init({ webhook: webhook });
         }
     });
 
