@@ -52,8 +52,8 @@
 
         @media (max-width: 768px) {
             .geovi-character {
-                width: 80px;
-                height: 80px;
+                width: 100px;
+                height: 100px;
             }
         }
 
@@ -75,9 +75,9 @@
 
         @media (max-width: 768px) {
             .geovi-smiley-face {
-                width: 70px;
-                height: 70px;
-                border: 4px solid #000;
+                width: 90px;
+                height: 90px;
+                border: 5px solid #000;
                 top: 5px;
                 left: 5px;
             }
@@ -99,13 +99,13 @@
 
         @media (max-width: 768px) {
             .geovi-eyes {
-                gap: 10px;
-                margin-bottom: 8px;
+                gap: 14px;
+                margin-bottom: 10px;
             }
 
             .geovi-eye {
-                width: 12px;
-                height: 12px;
+                width: 16px;
+                height: 16px;
             }
         }
 
@@ -119,11 +119,11 @@
 
         @media (max-width: 768px) {
             .geovi-smile {
-                width: 26px;
-                height: 13px;
-                border: 3px solid #000;
+                width: 34px;
+                height: 17px;
+                border: 4px solid #000;
                 border-top: none;
-                border-radius: 0 0 26px 26px;
+                border-radius: 0 0 34px 34px;
             }
         }
 
@@ -248,6 +248,7 @@
                 top: 0;
                 width: 100vw;
                 height: 100vh;
+                height: 100dvh; /* Dynamic viewport height - better for mobile */
                 max-height: none;
                 border-radius: 0;
                 border: none;
@@ -337,6 +338,9 @@
             display: flex;
             gap: 8px;
             background: white;
+            /* Prevent keyboard from covering input on mobile */
+            position: sticky;
+            bottom: 0;
         }
 
         .geovi-chat-input {
@@ -586,17 +590,10 @@
             
             if (isShowing) {
                 this.chatWindow.classList.remove('show');
-                // Re-enable body scroll on mobile
-                document.body.style.overflow = '';
-                document.body.style.position = '';
+                this.enableBodyScroll();
             } else {
                 this.chatWindow.classList.add('show');
-                // Disable body scroll on mobile to prevent issues with keyboard
-                if (window.innerWidth <= 768) {
-                    document.body.style.overflow = 'hidden';
-                    document.body.style.position = 'fixed';
-                    document.body.style.width = '100%';
-                }
+                this.disableBodyScroll();
                 
                 // Focus input after a short delay to ensure proper rendering
                 setTimeout(() => {
@@ -607,10 +604,35 @@
 
         closeChat() {
             this.chatWindow.classList.remove('show');
+            this.enableBodyScroll();
+        }
+
+        disableBodyScroll() {
+            // Prevent body scroll on mobile and handle viewport issues
+            if (window.innerWidth <= 768) {
+                document.body.style.overflow = 'hidden';
+                document.body.style.position = 'fixed';
+                document.body.style.width = '100%';
+                document.body.style.height = '100%';
+                
+                // Save current scroll position
+                this.scrollPosition = window.pageYOffset;
+                document.body.style.top = `-${this.scrollPosition}px`;
+            }
+        }
+
+        enableBodyScroll() {
             // Re-enable body scroll
             document.body.style.overflow = '';
             document.body.style.position = '';
             document.body.style.width = '';
+            document.body.style.height = '';
+            document.body.style.top = '';
+            
+            // Restore scroll position
+            if (this.scrollPosition !== undefined) {
+                window.scrollTo(0, this.scrollPosition);
+            }
         }
 
         connect(webhookUrl) {
