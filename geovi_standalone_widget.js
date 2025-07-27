@@ -738,17 +738,12 @@
         connect(webhookUrl) {
             this.options.webhook = webhookUrl;
             this.isConnected = true;
-            console.log('🔥 Geovi connected to webhook:', webhookUrl);
+            console.log('🔥 Geovi connected to n8n chat:', webhookUrl);
         }
 
         async sendMessage() {
             const message = this.field.value.trim();
-            if (!message || !this.isConnected) {
-                if (!this.isConnected) {
-                    this.addMessage('Sistemul nu este conectat încă. Te rog să încerci mai târziu.', 'bot');
-                }
-                return;
-            }
+            if (!message) return;
 
             // Add user message
             this.addMessage(message, 'user');
@@ -760,48 +755,64 @@
             const loadingElement = this.showLoading();
 
             try {
-                const payload = {
-                    message: message,
-                    timestamp: new Date().toISOString(),
-                    sessionId: this.sessionId
-                };
+                if (this.options.webhook) {
+                    // N8N Chat Agent format - EXACT CA ÎNAINTE
+                    const payload = {
+                        action: 'sendMessage',
+                        sessionId: this.sessionId,
+                        chatInput: message
+                    };
 
-                console.log('🚀 Sending to webhook:', payload);
+                    console.log('🚀 Sending to n8n:', payload);
 
-                const response = await fetch(this.options.webhook, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload)
-                });
+                    const response = await fetch(this.options.webhook, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(payload)
+                    });
 
-                console.log('📡 Response status:', response.status);
+                    console.log('📡 Response status:', response.status);
 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    console.log('📥 n8n Response:', data);
+                    
+                    loadingElement.remove();
+                    
+                    // Handle n8n chat response format - EXACT CA ÎNAINTE
+                    let botMessage = '';
+                    
+                    if (data.output) {
+                        botMessage = data.output;
+                    } else if (data.response) {
+                        botMessage = data.response;
+                    } else if (data.message) {
+                        botMessage = data.message;
+                    } else if (typeof data === 'string') {
+                        botMessage = data;
+                    } else {
+                        botMessage = 'Am primit răspunsul, dar nu îl pot afișa corect.';
+                    }
+                    
+                    this.addMessage(botMessage, 'bot');
+                    
+                } else {
+                    // Demo response dacă nu e webhook
+                    setTimeout(() => {
+                        loadingElement.remove();
+                        this.addMessage('Sistemul nu este conectat la AI încă. Te rog configurează webhook-ul.', 'bot');
+                    }, 1000);
                 }
-
-                const data = await response.json();
-                console.log('📥 Response data:', data);
-                
-                loadingElement.remove();
-                
-                let botMessage = data.response || data.output || data.message;
-                if (typeof data === 'string') {
-                    botMessage = data;
-                }
-                
-                if (!botMessage) {
-                    botMessage = 'Am primit răspunsul, dar nu îl pot afișa corect. Te rog încearcă din nou.';
-                }
-                
-                this.addMessage(botMessage, 'bot');
                 
             } catch (error) {
-                console.error('❌ Webhook error:', error);
+                console.error('❌ Geovi n8n error:', error);
                 loadingElement.remove();
-                this.addMessage('Ne pare rău, am o problemă de conexiune cu sistemul AI. Te rog încearcă din nou.', 'bot');
+                this.addMessage('Îmi pare rău, am o problemă de conexiune cu sistemul AI. Te rog încearcă din nou.', 'bot');
             }
 
             this.send.disabled = false;
