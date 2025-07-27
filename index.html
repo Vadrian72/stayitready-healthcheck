@@ -1,211 +1,747 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>DNS & HTTP Checker</title>
-<style>
-body {
-  background-color: #121212;
-  color: #e0e0e0;
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 20px;
-}
-h1 {
-  text-align: center;
-  color: #00ff99;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-th, td {
-  padding: 10px;
-  text-align: left;
-  border-bottom: 1px solid #333;
-}
-.status {
-  font-weight: bold;
-}
-.ok {
-  color: #00ff99;
-}
-.fail {
-  color: #ff5555;
-}
-#log {
-  margin-top: 30px;
-  background: #1e1e1e;
-  padding: 10px;
-  max-height: 200px;
-  overflow-y: auto;
-  border: 1px solid #333;
-}
-</style>
-</head>
-<body>
-<h1>DNS & HTTP Checker</h1>
-<table>
-<thead>
-<tr>
-  <th>Domeniu</th>
-  <th>A Record</th>
-  <th>CNAME</th>
-  <th>HTTP</th>
-</tr>
-</thead>
-<tbody id="results"></tbody>
-</table>
+// Geovi Standalone Chat Widget v1.0
+// Creat pentru integrare cu n8n
 
-<h2>Log downtime</h2>
-<div id="log"></div>
+(function() {
+  'use strict';
 
-<!-- Geovi Chat Widget - Optimizat pentru Desktop & Mobile -->
-<script src="geovi_standalone_widget.js"></script>
-<script>
-  // Auto-detecție pentru localhost vs ngrok
-  const isLocalAccess = window.location.hostname === 'localhost' || 
-                       window.location.hostname === '127.0.0.1' ||
-                       window.location.hostname === '192.168.1.105'; // Adaugă și IP-ul local
+  // Inject CSS styles
+  const css = `
+    /* Geovi Chat Widget Styles */
+    .geovi-widget {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 10000;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
 
-  // URL-uri pentru diferite medii
-  const webhookUrls = {
-    local: 'http://localhost:5678/webhook/268d2104-8c70-48e3-b421-29a032c97e0d/chat',
-    ngrok: 'https://73fc8f0beddf.ngrok-free.app/webhook/268d2104-8c70-48e3-b421-29a032c97e0d/chat'
+    .geovi-widget.bottom-left {
+      left: 20px;
+      right: auto;
+    }
+
+    .geovi-bubble {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #00ff99, #00cc7a);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0, 255, 153, 0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .geovi-bubble::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%);
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .geovi-bubble:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 25px rgba(0, 255, 153, 0.5);
+    }
+
+    .geovi-bubble:hover::before {
+      opacity: 1;
+    }
+
+    .geovi-bubble:active {
+      transform: scale(0.95);
+    }
+
+    .geovi-icon {
+      width: 28px;
+      height: 28px;
+      fill: white;
+      transition: transform 0.3s ease;
+    }
+
+    .geovi-bubble:hover .geovi-icon {
+      transform: rotate(10deg);
+    }
+
+    /* Pulse animation */
+    @keyframes geovi-pulse {
+      0% {
+        box-shadow: 0 4px 20px rgba(0, 255, 153, 0.3);
+      }
+      50% {
+        box-shadow: 0 4px 30px rgba(0, 255, 153, 0.6);
+      }
+      100% {
+        box-shadow: 0 4px 20px rgba(0, 255, 153, 0.3);
+      }
+    }
+
+    .geovi-bubble.pulse {
+      animation: geovi-pulse 2s infinite;
+    }
+
+    /* Notification dot */
+    .geovi-notification {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      width: 16px;
+      height: 16px;
+      background: #ff4757;
+      border-radius: 50%;
+      border: 2px solid #121212;
+      display: none;
+    }
+
+    .geovi-notification.show {
+      display: block;
+      animation: geovi-bounce 0.5s ease;
+    }
+
+    @keyframes geovi-bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+      }
+      40% {
+        transform: translateY(-4px);
+      }
+      60% {
+        transform: translateY(-2px);
+      }
+    }
+
+    /* Chat window */
+    .geovi-chat {
+      position: absolute;
+      bottom: 80px;
+      right: 0;
+      width: 350px;
+      height: 500px;
+      background: #1e1e1e;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid #333;
+    }
+
+    .geovi-widget.bottom-left .geovi-chat {
+      left: 0;
+      right: auto;
+    }
+
+    .geovi-chat.show {
+      display: flex;
+      animation: geovi-slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes geovi-slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .geovi-header {
+      background: linear-gradient(135deg, #00ff99, #00cc7a);
+      color: white;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .geovi-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .geovi-status {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .geovi-close {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 4px;
+      transition: background 0.2s ease;
+      font-size: 16px;
+    }
+
+    .geovi-close:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .geovi-messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      background: #1e1e1e;
+    }
+
+    .geovi-message {
+      margin-bottom: 12px;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .geovi-message.user {
+      justify-content: flex-end;
+    }
+
+    .geovi-message-content {
+      max-width: 80%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
+
+    .geovi-message.bot .geovi-message-content {
+      background: #333;
+      color: #e0e0e0;
+      border-bottom-left-radius: 4px;
+    }
+
+    .geovi-message.user .geovi-message-content {
+      background: #00ff99;
+      color: #121212;
+      border-bottom-right-radius: 4px;
+    }
+
+    .geovi-input-area {
+      padding: 15px;
+      border-top: 1px solid #333;
+      background: #1e1e1e;
+    }
+
+    .geovi-input-container {
+      display: flex;
+      gap: 8px;
+    }
+
+    .geovi-input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid #444;
+      border-radius: 20px;
+      background: #2a2a2a;
+      color: #e0e0e0;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .geovi-input:focus {
+      border-color: #00ff99;
+    }
+
+    .geovi-input::placeholder {
+      color: #888;
+    }
+
+    .geovi-send {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 50%;
+      background: #00ff99;
+      color: #121212;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .geovi-send:hover {
+      background: #00cc7a;
+      transform: scale(1.05);
+    }
+
+    .geovi-send:active {
+      transform: scale(0.95);
+    }
+
+    .geovi-send:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Loading indicator */
+    .geovi-loading {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 12px;
+    }
+
+    .geovi-loading-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #666;
+      animation: geovi-loading 1.4s infinite ease-in-out;
+    }
+
+    .geovi-loading-dot:nth-child(1) { animation-delay: -0.32s; }
+    .geovi-loading-dot:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes geovi-loading {
+      0%, 80%, 100% {
+        transform: scale(0);
+        opacity: 0.5;
+      }
+      40% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* Welcome message */
+    .geovi-welcome {
+      position: absolute;
+      bottom: 80px;
+      right: 70px;
+      background: #2a2a2a;
+      color: #e0e0e0;
+      padding: 10px 15px;
+      border-radius: 12px;
+      font-size: 14px;
+      white-space: nowrap;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      border: 1px solid #444;
+    }
+
+    .geovi-widget.bottom-left .geovi-welcome {
+      left: 70px;
+      right: auto;
+    }
+
+    .geovi-welcome::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      right: 15px;
+      width: 10px;
+      height: 10px;
+      background: #2a2a2a;
+      border-right: 1px solid #444;
+      border-bottom: 1px solid #444;
+      transform: rotate(45deg);
+    }
+
+    .geovi-widget.bottom-left .geovi-welcome::after {
+      left: 15px;
+      right: auto;
+    }
+
+    .geovi-welcome.show {
+      opacity: 1;
+      animation: geovi-welcomeBounce 0.5s ease;
+    }
+
+    @keyframes geovi-welcomeBounce {
+      0% {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 480px) {
+      .geovi-widget {
+        bottom: 15px;
+        right: 15px;
+      }
+      
+      .geovi-widget.bottom-left {
+        left: 15px;
+        right: auto;
+      }
+      
+      .geovi-bubble {
+        width: 55px;
+        height: 55px;
+      }
+      
+      .geovi-icon {
+        width: 24px;
+        height: 24px;
+      }
+      
+      .geovi-chat {
+        width: calc(100vw - 30px);
+        height: 70vh;
+        bottom: 85px;
+        right: -15px;
+        max-width: 350px;
+      }
+      
+      .geovi-widget.bottom-left .geovi-chat {
+        left: -15px;
+        right: auto;
+      }
+      
+      .geovi-chat.keyboard-open {
+        height: 50vh;
+        bottom: 10px;
+      }
+
+      .geovi-welcome {
+        right: 10px;
+        bottom: 85px;
+        max-width: calc(100vw - 120px);
+        white-space: normal;
+      }
+      
+      .geovi-widget.bottom-left .geovi-welcome {
+        left: 10px;
+        right: auto;
+      }
+    }
+  `;
+
+  // Inject CSS
+  const style = document.createElement('style');
+  style.textContent = css;
+  document.head.appendChild(style);
+
+  // Global Geovi object
+  window.Geovi = {
+    widget: null,
+    config: {
+      webhook: '',
+      greeting: 'Salut! Sunt Geovi și te ajut cu încălzirea! 🔥',
+      position: 'bottom-right'
+    },
+
+    init: function(options = {}) {
+      // Merge configuration
+      this.config = { ...this.config, ...options };
+      
+      // Create widget if not exists
+      if (!this.widget) {
+        this.createWidget();
+        this.widget = new GeoviWidget(this.config);
+      }
+    },
+
+    createWidget: function() {
+      const widgetHTML = `
+        <div class="geovi-widget ${this.config.position === 'bottom-left' ? 'bottom-left' : ''}" id="geoviWidget">
+          <div class="geovi-welcome" id="geoviWelcome">
+            ${this.config.greeting}
+          </div>
+          
+          <div class="geovi-bubble pulse" id="geoviBubble">
+            <div class="geovi-notification" id="geoviNotification"></div>
+            <svg class="geovi-icon" viewBox="0 0 24 24">
+              <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.9 1 3 1.9 3 3V21C3 22.1 3.9 23 5 23H19C20.1 23 21 22.1 21 21V9ZM19 21H5V3H13V9H19V21ZM12 18L17 12H14V8H10V12H7L12 18Z"/>
+            </svg>
+          </div>
+          
+          <div class="geovi-chat" id="geoviChat">
+            <div class="geovi-header">
+              <div>
+                <h3>🔥 Geovi</h3>
+                <div class="geovi-status">Online acum</div>
+              </div>
+              <button class="geovi-close" id="geoviClose">✕</button>
+            </div>
+            
+            <div class="geovi-messages" id="geoviMessages">
+              <div class="geovi-message bot">
+                <div class="geovi-message-content">
+                  ${this.config.greeting}
+                </div>
+              </div>
+            </div>
+            
+            <div class="geovi-input-area">
+              <div class="geovi-input-container">
+                <input type="text" class="geovi-input" id="geoviInput" placeholder="Scrie mesajul tău aici...">
+                <button class="geovi-send" id="geoviSend">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.insertAdjacentHTML('beforeend', widgetHTML);
+    }
   };
 
-  // Selectează URL-ul corect
-  const selectedWebhook = isLocalAccess ? webhookUrls.local : webhookUrls.ngrok;
-
-  // Inițializează Geovi
-  Geovi.init({
-    webhook: selectedWebhook,
-    greeting: 'Salut! Sunt Geovi și te ajut cu încălzirea! 🔥',
-    position: 'bottom-right'
-  });
-
-  // Debug info în consolă
-  console.log('🔥 Geovi Widget Inițializat:');
-  console.log('📍 Hostname:', window.location.hostname);
-  console.log('🔗 Webhook:', selectedWebhook);
-  console.log('📱 Este local:', isLocalAccess);
-</script>
-  
-<script>
-const domains = [
-  "stayitready.com",
-  "www.stayitready.com",
-  "https://stayitready.com",
-  "https://www.stayitready.com"
-];
-
-const lastStatus = {};  // ține statusul anterior pentru fiecare domeniu
-const downSince = {};   // când a început downtime-ul
-
-function getTimeRo() {
-  const now = new Date();
-  const roTime = new Date(now.getTime() + (2 * 60 * 60 * 1000)); // GMT+2
-  return roTime.toLocaleString('ro-RO');
-}
-
-function logEvent(text) {
-  const logDiv = document.getElementById('log');
-  const p = document.createElement('div');
-  p.textContent = `[${getTimeRo()}] ${text}`;
-  logDiv.prepend(p);
-}
-
-async function checkDomain(dom) {
-  const row = document.getElementById(dom.id) || document.createElement('tr');
-  row.id = dom.id;
-
-  row.innerHTML = `
-    <td>${dom.name}</td>
-    <td class="status" id="${dom.id}-a">...</td>
-    <td class="status" id="${dom.id}-cname">...</td>
-    <td class="status" id="${dom.id}-http">...</td>
-  `;
-  if (!row.parentNode) document.getElementById('results').appendChild(row);
-
-  // DNS A Record
-  fetch(`https://dns.google/resolve?name=${dom.name}&type=A`)
-    .then(r => r.json())
-    .then(data => {
-      const aCell = document.getElementById(`${dom.id}-a`);
-      if (data.Answer) {
-        aCell.textContent = data.Answer[0].data;
-        aCell.className = 'status ok';
+  // Widget class
+  class GeoviWidget {
+    constructor(config) {
+      this.config = config;
+      this.isOpen = false;
+      this.isLoading = false;
+      this.init();
+    }
+    
+    init() {
+      this.bubble = document.getElementById('geoviBubble');
+      this.chat = document.getElementById('geoviChat');
+      this.closeBtn = document.getElementById('geoviClose');
+      this.input = document.getElementById('geoviInput');
+      this.sendBtn = document.getElementById('geoviSend');
+      this.messages = document.getElementById('geoviMessages');
+      this.welcome = document.getElementById('geoviWelcome');
+      this.notification = document.getElementById('geoviNotification');
+      
+      this.setupEventListeners();
+      this.showWelcomeMessage();
+      this.handleMobileKeyboard();
+    }
+    
+    setupEventListeners() {
+      this.bubble.addEventListener('click', () => this.toggleChat());
+      this.closeBtn.addEventListener('click', () => this.closeChat());
+      
+      this.sendBtn.addEventListener('click', () => this.sendMessage());
+      this.input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !this.isLoading) this.sendMessage();
+      });
+      
+      this.welcome.addEventListener('click', () => this.hideWelcomeMessage());
+      
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.geovi-widget')) {
+          this.hideWelcomeMessage();
+        }
+      });
+    }
+    
+    toggleChat() {
+      if (this.isOpen) {
+        this.closeChat();
       } else {
-        aCell.textContent = '❌';
-        aCell.className = 'status fail';
+        this.openChat();
       }
-    }).catch(() => {
-      const aCell = document.getElementById(`${dom.id}-a`);
-      aCell.textContent = '❌';
-      aCell.className = 'status fail';
-    });
-
-  // DNS CNAME Record
-  fetch(`https://dns.google/resolve?name=${dom.name}&type=CNAME`)
-    .then(r => r.json())
-    .then(data => {
-      const cnameCell = document.getElementById(`${dom.id}-cname`);
-      if (data.Answer) {
-        cnameCell.textContent = data.Answer[0].data;
-        cnameCell.className = 'status ok';
+    }
+    
+    openChat() {
+      this.isOpen = true;
+      this.chat.classList.add('show');
+      this.bubble.classList.remove('pulse');
+      this.hideWelcomeMessage();
+      this.hideNotification();
+      
+      setTimeout(() => {
+        this.input.focus();
+      }, 300);
+    }
+    
+    closeChat() {
+      this.isOpen = false;
+      this.chat.classList.remove('show');
+    }
+    
+    async sendMessage() {
+      const text = this.input.value.trim();
+      if (!text || this.isLoading) return;
+      
+      this.addMessage(text, 'user');
+      this.input.value = '';
+      this.setLoading(true);
+      
+      try {
+        if (this.config.webhook) {
+          await this.sendToWebhook(text);
+        } else {
+          setTimeout(() => {
+            this.addBotResponse(text);
+            this.setLoading(false);
+          }, 1000);
+        }
+      } catch (error) {
+        console.error('Geovi: Error sending message:', error);
+        this.addMessage('Ne pare rău, a apărut o eroare. Te rog încearcă din nou.', 'bot');
+        this.setLoading(false);
+      }
+    }
+    
+    async sendToWebhook(message) {
+      try {
+        const response = await fetch(this.config.webhook, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: message,
+            timestamp: new Date().toISOString(),
+            sessionId: this.getSessionId()
+          })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.response) {
+            this.addMessage(data.response, 'bot');
+          } else {
+            this.addMessage('Mulțumesc pentru mesaj! Îți voi răspunde cât de curând.', 'bot');
+          }
+        } else {
+          throw new Error('Network response was not ok');
+        }
+      } catch (error) {
+        console.error('Webhook error:', error);
+        this.addMessage('Ne pare rău, serviciul este temporar indisponibil. Te rog încearcă din nou mai târziu.', 'bot');
+      } finally {
+        this.setLoading(false);
+      }
+    }
+    
+    getSessionId() {
+      let sessionId = localStorage.getItem('geovi-session-id');
+      if (!sessionId) {
+        sessionId = 'geovi-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('geovi-session-id', sessionId);
+      }
+      return sessionId;
+    }
+    
+    setLoading(loading) {
+      this.isLoading = loading;
+      this.sendBtn.disabled = loading;
+      
+      if (loading) {
+        this.showTypingIndicator();
       } else {
-        cnameCell.textContent = '❌';
-        cnameCell.className = 'status fail';
+        this.hideTypingIndicator();
       }
-    }).catch(() => {
-      const cnameCell = document.getElementById(`${dom.id}-cname`);
-      cnameCell.textContent = '❌';
-      cnameCell.className = 'status fail';
-    });
-
-  // HTTP status
-  let url = dom.name;
-  if (!url.startsWith("http")) url = "https://" + url;
-
-  fetch(url, { method: 'HEAD', mode: 'no-cors' })
-    .then(() => {
-      const httpCell = document.getElementById(`${dom.id}-http`);
-      httpCell.textContent = '✅';
-      httpCell.className = 'status ok';
-
-      if (lastStatus[dom.id] === 'down') {
-        const downTime = downSince[dom.id];
-        const upTime = new Date();
-        const duration = ((upTime - downTime) / 1000).toFixed(1);
-        logEvent(`${dom.name} UP after ${duration} sec downtime`);
-        delete downSince[dom.id];
+    }
+    
+    showTypingIndicator() {
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'geovi-message bot';
+      typingDiv.id = 'geovi-typing';
+      typingDiv.innerHTML = `
+        <div class="geovi-message-content">
+          <div class="geovi-loading">
+            <div class="geovi-loading-dot"></div>
+            <div class="geovi-loading-dot"></div>
+            <div class="geovi-loading-dot"></div>
+          </div>
+        </div>
+      `;
+      
+      this.messages.appendChild(typingDiv);
+      this.messages.scrollTop = this.messages.scrollHeight;
+    }
+    
+    hideTypingIndicator() {
+      const typing = document.getElementById('geovi-typing');
+      if (typing) {
+        typing.remove();
       }
-
-      lastStatus[dom.id] = 'up';
-    })
-    .catch(() => {
-      const httpCell = document.getElementById(`${dom.id}-http`);
-      httpCell.textContent = '❌';
-      httpCell.className = 'status fail';
-
-      if (lastStatus[dom.id] !== 'down') {
-        downSince[dom.id] = new Date();
-        logEvent(`${dom.name} DOWN`);
+    }
+    
+    addMessage(text, type) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `geovi-message ${type}`;
+      messageDiv.innerHTML = `
+        <div class="geovi-message-content">${this.escapeHtml(text)}</div>
+      `;
+      
+      this.messages.appendChild(messageDiv);
+      this.messages.scrollTop = this.messages.scrollHeight;
+    }
+    
+    escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    addBotResponse(userMessage) {
+      const responses = [
+        "Înțeleg! Pentru încălzire optimă, îți recomand să verifici izolația casei. 🏠",
+        "Excelentă întrebare! Temperatura ideală în casă este între 20-22°C. 🌡️",
+        "Pentru economii la încălzire, poți folosi termostatul inteligent! 💡",
+        "Îți sugerez să verifici filtrele la sistem - ar trebui schimbate regulat! 🔧",
+        "Pentru confort maxim, asigură-te că toate ferestrele sunt bine sigilate! 🪟",
+        "Îți pot recomanda să programezi o verificare anuală a sistemului de încălzire! 🔍",
+        "Pentru eficiență maximă, consideră izolarea termică a conductelor! 🌡️"
+      ];
+      
+      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+      this.addMessage(randomResponse, 'bot');
+    }
+    
+    showWelcomeMessage() {
+      setTimeout(() => {
+        this.welcome.classList.add('show');
+        this.showNotification();
+      }, 2000);
+      
+      setTimeout(() => {
+        this.hideWelcomeMessage();
+      }, 7000);
+    }
+    
+    hideWelcomeMessage() {
+      this.welcome.classList.remove('show');
+    }
+    
+    showNotification() {
+      this.notification.classList.add('show');
+    }
+    
+    hideNotification() {
+      this.notification.classList.remove('show');
+    }
+    
+    handleMobileKeyboard() {
+      if (/Mobi|Android/i.test(navigator.userAgent)) {
+        let initialViewportHeight = window.innerHeight;
+        
+        window.addEventListener('resize', () => {
+          const currentViewportHeight = window.innerHeight;
+          const heightDifference = initialViewportHeight - currentViewportHeight;
+          
+          if (heightDifference > 150) {
+            this.chat.classList.add('keyboard-open');
+          } else {
+            this.chat.classList.remove('keyboard-open');
+          }
+        });
       }
+    }
+  }
 
-      lastStatus[dom.id] = 'down';
-    });
-}
-
-function updateAll() {
-  domains.forEach(name => {
-    checkDomain({ name, id: name.replace(/[^a-zA-Z0-9]/g, '-') });
-  });
-}
-
-updateAll();
-setInterval(updateAll, 5000);
-</script>
-</body>
-</html>
+})();
