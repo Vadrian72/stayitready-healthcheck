@@ -50,6 +50,52 @@
             }
         }
 
+        /* Mobile-specific styles using class instead of media query */
+        .geovi-mobile .geovi-character {
+            width: 100px !important;
+            height: 100px !important;
+        }
+
+        .geovi-mobile .geovi-smiley-face {
+            width: 90px !important;
+            height: 90px !important;
+            border: 5px solid #000 !important;
+        }
+
+        .geovi-mobile .geovi-eyes {
+            gap: 14px !important;
+            margin-bottom: 10px !important;
+        }
+
+        .geovi-mobile .geovi-eye {
+            width: 16px !important;
+            height: 16px !important;
+        }
+
+        .geovi-mobile .geovi-smile {
+            width: 34px !important;
+            height: 17px !important;
+            border: 4px solid #000 !important;
+            border-top: none !important;
+            border-radius: 0 0 34px 34px !important;
+        }
+
+        .geovi-mobile .geovi-chat-window {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            max-height: none !important;
+            border-radius: 0 !important;
+            border: none !important;
+            z-index: 999999 !important;
+        }
+
+        /* Keep original media query as fallback */
         @media (max-width: 768px) {
             .geovi-character {
                 width: 100px;
@@ -513,6 +559,9 @@
             // Create container
             this.createContainer();
             
+            // Detect mobile and add class
+            this.detectMobile();
+            
             // Bind events
             this.bindEvents();
             
@@ -525,6 +574,8 @@
             }
 
             console.log('🔥 Geovi Chat Widget initialized for n8n');
+            console.log('📱 Is Mobile:', this.isMobile);
+            console.log('📏 Screen size:', window.innerWidth + 'x' + window.innerHeight);
         }
 
         injectCSS() {
@@ -562,6 +613,25 @@
             this.closeBtn = document.getElementById('geovi-close-btn');
         }
 
+        detectMobile() {
+            // Multiple ways to detect mobile
+            this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                           window.innerWidth <= 768 ||
+                           ('ontouchstart' in window);
+            
+            console.log('🔍 Mobile detection:');
+            console.log('- User Agent Mobile:', /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+            console.log('- Screen Width <= 768:', window.innerWidth <= 768);
+            console.log('- Touch Support:', 'ontouchstart' in window);
+            console.log('- Final isMobile:', this.isMobile);
+            
+            // Add mobile class to container
+            if (this.isMobile) {
+                this.container.classList.add('geovi-mobile');
+                document.body.classList.add('geovi-mobile-active');
+            }
+        }
+
         bindEvents() {
             this.character.addEventListener('click', () => this.toggleChat());
             this.closeBtn.addEventListener('click', () => this.closeChat());
@@ -572,6 +642,16 @@
                     this.sendMessage();
                 }
             });
+
+            // Handle viewport changes on mobile (keyboard show/hide)
+            if (window.innerWidth <= 768) {
+                window.addEventListener('resize', () => {
+                    if (this.chatWindow.classList.contains('show')) {
+                        // Force viewport recalculation
+                        this.chatWindow.style.height = '100dvh';
+                    }
+                });
+            }
         }
 
         showGreeting() {
@@ -588,14 +668,32 @@
             this.speechBubble.classList.remove('show');
             const isShowing = this.chatWindow.classList.contains('show');
             
+            console.log('🔄 Toggle chat - Mobile:', this.isMobile, 'Showing:', !isShowing);
+            
             if (isShowing) {
                 this.chatWindow.classList.remove('show');
                 this.enableBodyScroll();
             } else {
                 this.chatWindow.classList.add('show');
-                this.disableBodyScroll();
                 
-                // Focus input after a short delay to ensure proper rendering
+                if (this.isMobile) {
+                    this.disableBodyScroll();
+                    // Force mobile styles
+                    this.chatWindow.style.cssText = `
+                        position: fixed !important;
+                        top: 0 !important;
+                        left: 0 !important;
+                        right: 0 !important;
+                        bottom: 0 !important;
+                        width: 100vw !important;
+                        height: 100vh !important;
+                        z-index: 999999 !important;
+                        border: none !important;
+                        border-radius: 0 !important;
+                    `;
+                }
+                
+                // Focus input after a short delay
                 setTimeout(() => {
                     this.chatInput.focus();
                 }, 100);
@@ -608,31 +706,56 @@
         }
 
         disableBodyScroll() {
-            // Prevent body scroll on mobile and handle viewport issues
-            if (window.innerWidth <= 768) {
-                document.body.style.overflow = 'hidden';
-                document.body.style.position = 'fixed';
-                document.body.style.width = '100%';
-                document.body.style.height = '100%';
-                
-                // Save current scroll position
-                this.scrollPosition = window.pageYOffset;
-                document.body.style.top = `-${this.scrollPosition}px`;
+            console.log('🚫 Disabling body scroll');
+            
+            // Save current scroll position
+            this.scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+            
+            // Disable body scroll with multiple techniques
+            document.body.style.cssText = `
+                overflow: hidden !important;
+                position: fixed !important;
+                width: 100% !important;
+                height: 100% !important;
+                top: -${this.scrollPosition}px !important;
+            `;
+            
+            document.documentElement.style.cssText = `
+                overflow: hidden !important;
+                height: 100% !important;
+            `;
+            
+            // Prevent touch events on body
+            if (this.isMobile) {
+                document.body.addEventListener('touchmove', this.preventScroll, { passive: false });
+                document.addEventListener('touchmove', this.preventScroll, { passive: false });
             }
         }
 
         enableBodyScroll() {
+            console.log('✅ Enabling body scroll');
+            
+            // Remove touch event listeners
+            if (this.isMobile) {
+                document.body.removeEventListener('touchmove', this.preventScroll);
+                document.removeEventListener('touchmove', this.preventScroll);
+            }
+            
             // Re-enable body scroll
-            document.body.style.overflow = '';
-            document.body.style.position = '';
-            document.body.style.width = '';
-            document.body.style.height = '';
-            document.body.style.top = '';
+            document.body.style.cssText = '';
+            document.documentElement.style.cssText = '';
             
             // Restore scroll position
             if (this.scrollPosition !== undefined) {
                 window.scrollTo(0, this.scrollPosition);
+                this.scrollPosition = undefined;
             }
+        }
+
+        preventScroll(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
         }
 
         connect(webhookUrl) {
