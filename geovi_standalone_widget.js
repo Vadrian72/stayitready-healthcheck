@@ -143,7 +143,7 @@
             border-top: 8px solid white !important;
         }
 
-        /* MOBILE STYLES - Full Screen App */
+        /* MOBILE STYLES - Full Screen App (DEFAULT) */
         .geovi-chat-v5 {
             position: fixed !important;
             top: 0 !important;
@@ -380,8 +380,8 @@
             }
         }
 
-        /* DESKTOP STYLES - Right Sidebar */
-        @media (min-width: 768px) {
+        /* DESKTOP STYLES - Right Sidebar (DOAR PE DESKTOP MARE) */
+        @media (min-width: 1024px) {
             .geovi-chat-v5 {
                 position: fixed !important;
                 top: 0 !important;
@@ -443,7 +443,7 @@
             }
         }
 
-        /* PREVENT BODY SCROLL WHEN CHAT IS OPEN */
+        /* PREVENT BODY SCROLL WHEN CHAT IS OPEN - DOAR PE MOBILE */
         body.geovi-chat-open-v5 {
             overflow: hidden !important;
             height: 100vh !important;
@@ -452,7 +452,7 @@
         }
 
         /* DESKTOP: Don't prevent body scroll */
-        @media (min-width: 768px) {
+        @media (min-width: 1024px) {
             body.geovi-chat-open-v5 {
                 overflow: auto !important;
                 height: auto !important;
@@ -667,7 +667,8 @@
                 this.messages.style.paddingBottom = '100px';
                 setTimeout(() => this.scrollToBottom(), 100);
             } else {
-                this.messages.style.paddingBottom = window.innerWidth >= 768 ? '20px' : '16px';
+                // Resetează padding în funcție de dimensiunea ecranului
+                this.messages.style.paddingBottom = window.innerWidth >= 1024 ? '20px' : '16px';
             }
         }
 
@@ -709,7 +710,8 @@
         openChat() {
             this.chat.classList.add('open');
             
-            if (isMobile && !isTablet) {
+            // Pe mobile (sub 1024px) blochează scroll-ul body
+            if (window.innerWidth < 1024) {
                 document.body.classList.add('geovi-chat-open-v5');
             }
 
@@ -726,7 +728,7 @@
             // Reset keyboard handling
             this.inputArea.classList.remove('keyboard-open');
             this.inputArea.style.transform = '';
-            this.messages.style.paddingBottom = window.innerWidth >= 768 ? '20px' : '16px';
+            this.messages.style.paddingBottom = window.innerWidth >= 1024 ? '20px' : '16px';
         }
 
         scrollToBottom() {
