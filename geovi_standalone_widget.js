@@ -506,6 +506,17 @@
             this.field = document.getElementById('geovi-field');
             this.send = document.getElementById('geovi-send');
             this.close = document.getElementById('geovi-close');
+
+            // DEBUG - Check if elements exist
+            console.log('🔍 Geovi Debug:');
+            console.log('- Field element:', this.field);
+            console.log('- Send element:', this.send);
+            console.log('- Chat element:', this.chat);
+            
+            if (this.field) {
+                console.log('- Field visible:', window.getComputedStyle(this.field).display);
+                console.log('- Field opacity:', window.getComputedStyle(this.field).opacity);
+            }
         }
 
         bindEvents() {
