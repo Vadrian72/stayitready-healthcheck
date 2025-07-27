@@ -447,6 +447,8 @@
       // Merge configuration
       this.config = { ...this.config, ...options };
       
+      console.log('🔥 Geovi Config:', this.config);
+      
       // Create widget if not exists
       if (!this.widget) {
         this.createWidget();
@@ -509,6 +511,9 @@
       this.config = config;
       this.isOpen = false;
       this.isLoading = false;
+      
+      console.log('🎯 GeoviWidget initialized with config:', this.config);
+      
       this.init();
     }
     
@@ -580,15 +585,17 @@
       
       try {
         if (this.config.webhook) {
+          console.log('🚀 Using webhook:', this.config.webhook);
           await this.sendToWebhook(text);
         } else {
+          console.log('⚠️ No webhook configured, using demo response');
           setTimeout(() => {
             this.addBotResponse(text);
             this.setLoading(false);
           }, 1000);
         }
       } catch (error) {
-        console.error('Geovi: Error sending message:', error);
+        console.error('💥 Geovi: Error sending message:', error);
         this.addMessage('Ne pare rău, a apărut o eroare. Te rog încearcă din nou.', 'bot');
         this.setLoading(false);
       }
@@ -596,31 +603,50 @@
     
     async sendToWebhook(message) {
       try {
+        console.log('🔗 Sending to webhook:', this.config.webhook);
+        console.log('📝 Message:', message);
+        
+        const payload = {
+          message: message,
+          timestamp: new Date().toISOString(),
+          sessionId: this.getSessionId()
+        };
+        
+        console.log('📦 Payload:', payload);
+        
         const response = await fetch(this.config.webhook, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            message: message,
-            timestamp: new Date().toISOString(),
-            sessionId: this.getSessionId()
-          })
+          body: JSON.stringify(payload)
         });
+        
+        console.log('📡 Response status:', response.status);
+        console.log('📡 Response ok:', response.ok);
         
         if (response.ok) {
           const data = await response.json();
+          console.log('📥 Response data:', data);
+          
           if (data.response) {
             this.addMessage(data.response, 'bot');
           } else {
             this.addMessage('Mulțumesc pentru mesaj! Îți voi răspunde cât de curând.', 'bot');
           }
         } else {
-          throw new Error('Network response was not ok');
+          const errorText = await response.text();
+          console.error('❌ HTTP Error:', response.status, errorText);
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
       } catch (error) {
-        console.error('Webhook error:', error);
-        this.addMessage('Ne pare rău, serviciul este temporar indisponibil. Te rog încearcă din nou mai târziu.', 'bot');
+        console.error('❌ Webhook error:', error);
+        console.error('🔍 Error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
+        this.addMessage('Ne pare rău, a apărut o eroare. Te rog încearcă din nou.', 'bot');
       } finally {
         this.setLoading(false);
       }
