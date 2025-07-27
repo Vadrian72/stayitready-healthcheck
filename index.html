@@ -60,14 +60,38 @@ th, td {
 
 <h2>Log downtime</h2>
 <div id="log"></div>
-<script src="geovi_standalone_widget.js"></script>
+
+<!-- Geovi Chat Widget - Optimizat pentru Desktop & Mobile -->
+<script src="geovi_n8n_widget.js"></script>
 <script>
+  // Auto-detecție pentru localhost vs ngrok
+  const isLocalAccess = window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '192.168.1.105'; // Adaugă și IP-ul local
+
+  // URL-uri pentru diferite medii
+  const webhookUrls = {
+    local: 'http://localhost:5678/webhook/268d2104-8c70-48e3-b421-29a032c97e0d/chat',
+    ngrok: 'https://c74f987884a.ngrok-free.app/webhook/268d2104-8c70-48e3-b421-29a032c97e0d/chat'
+  };
+
+  // Selectează URL-ul corect
+  const selectedWebhook = isLocalAccess ? webhookUrls.local : webhookUrls.ngrok;
+
+  // Inițializează Geovi
   Geovi.init({
-    webhook: 'https://c74f987884a.ngrok-free.app/webhook/268d2104-8c70-48e3-b421-29a032c97e0d/chat',
-    greeting: 'Mesajul tău personalizat',
+    webhook: selectedWebhook,
+    greeting: 'Salut! Sunt Geovi și te ajut cu încălzirea! 🔥',
     position: 'bottom-right'
   });
+
+  // Debug info în consolă
+  console.log('🔥 Geovi Widget Inițializat:');
+  console.log('📍 Hostname:', window.location.hostname);
+  console.log('🔗 Webhook:', selectedWebhook);
+  console.log('📱 Este local:', isLocalAccess);
 </script>
+  
 <script>
 const domains = [
   "stayitready.com",
