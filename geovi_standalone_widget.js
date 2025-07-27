@@ -508,7 +508,53 @@
             this.close = document.getElementById('geovi-close');
             this.inputArea = document.getElementById('geovi-input-area');
 
-            console.log('🔥 Geovi Chat Widget v3.0 - Half Screen Setup Complete!');
+            // FORȚEZ din nou input-ul să fie vizibil
+            if (this.inputArea) {
+                this.inputArea.style.cssText = `
+                    position: absolute !important;
+                    bottom: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    height: 70px !important;
+                    background: #FF0000 !important;
+                    z-index: 999999 !important;
+                    display: flex !important;
+                    padding: 15px 20px !important;
+                    gap: 12px !important;
+                    align-items: center !important;
+                    border-top: 2px solid #FFD700 !important;
+                `;
+            }
+            
+            if (this.field) {
+                this.field.style.cssText = `
+                    flex: 1 !important;
+                    height: 45px !important;
+                    border: 2px solid #FFD700 !important;
+                    background: white !important;
+                    border-radius: 25px !important;
+                    padding: 12px 16px !important;
+                    font-size: 16px !important;
+                    color: #333 !important;
+                    outline: none !important;
+                `;
+            }
+
+            if (this.send) {
+                this.send.style.cssText = `
+                    height: 45px !important;
+                    padding: 12px 18px !important;
+                    background: #FFD700 !important;
+                    border: 2px solid #000 !important;
+                    border-radius: 25px !important;
+                    font-size: 15px !important;
+                    font-weight: bold !important;
+                    color: #333 !important;
+                    min-width: 70px !important;
+                `;
+            }
+
+            console.log('🔥 Input area FORCED with inline styles!');
         }
 
         bindEvents() {
