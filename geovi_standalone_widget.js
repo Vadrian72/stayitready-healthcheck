@@ -25,21 +25,20 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif !important;
         }
 
-        /* CONTAINER - Complet izolat de site */
+        /* CONTAINER - Poziționare SIGURĂ în ecran */
         .geovi-chat-container {
             position: fixed !important;
             bottom: 20px !important;
             right: 20px !important;
-            z-index: 2147483647 !important; /* Max z-index */
-            /* ANTI-ZOOM - Dimensiuni fixe indiferent de zoom */
-            transform-origin: bottom right !important;
+            z-index: 2147483647 !important;
+            /* Dimensiuni exacte pentru a nu ieși din ecran */
+            width: 80px !important;
+            height: 80px !important;
+            /* ANTI-ZOOM */
             transform: scale(1) !important;
+            transform-origin: bottom right !important;
             pointer-events: auto !important;
-            /* Prevent any site interference */
             isolation: isolate !important;
-            /* Asigură că nu iese din viewport */
-            max-width: calc(100vw - 40px) !important;
-            max-height: calc(100vh - 40px) !important;
         }
 
         /* CHARACTER BUTTON - MĂRIT SUFICIENT */
@@ -102,18 +101,20 @@
             border-radius: 0 0 28px 28px !important;
         }
 
-        /* SPEECH BUBBLE */
+        /* SPEECH BUBBLE - Poziționare SIGURĂ */
         .geovi-speech-bubble {
             position: absolute !important;
             bottom: 90px !important;
-            right: -70px !important;
-            left: -70px !important;
+            /* Poziționare simplă care nu iese din ecran */
+            right: 0px !important;
+            width: 200px !important;
+            /* Centrare prin transform */
+            transform-origin: bottom center !important;
+            margin-right: -60px !important;
             background: white !important;
-            padding: 15px 18px !important;
+            padding: 12px 16px !important;
             border-radius: 18px !important;
             box-shadow: 0 8px 25px rgba(0,0,0,0.3) !important;
-            max-width: 220px !important;
-            margin: 0 auto !important;
             font-size: 14px !important;
             font-weight: 500 !important;
             line-height: 1.4 !important;
@@ -132,7 +133,7 @@
             transform: translateY(0) scale(1) !important;
         }
 
-        /* Speech bubble arrow */
+        /* Speech bubble arrow - CENTRAT */
         .geovi-speech-bubble::after {
             content: '' !important;
             position: absolute !important;
@@ -415,6 +416,8 @@
             .geovi-chat-container {
                 bottom: 20px !important;
                 right: 20px !important;
+                width: 70px !important;
+                height: 70px !important;
             }
             
             .geovi-character {
@@ -461,12 +464,12 @@
             .geovi-speech-bubble {
                 bottom: 10px !important;
                 right: 80px !important;
-                left: auto !important;
+                margin-right: 0 !important;
+                width: 260px !important;
                 text-align: left !important;
                 font-size: 13px !important;
                 padding: 12px 16px !important;
                 transform: translateX(10px) !important;
-                max-width: 260px !important;
             }
 
             .geovi-speech-bubble.show {
