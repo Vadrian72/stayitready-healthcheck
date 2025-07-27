@@ -508,45 +508,7 @@
             this.close = document.getElementById('geovi-close');
             this.inputArea = document.getElementById('geovi-input-area');
 
-            // DEBUG - EXTENDED LOGGING
-            console.log('🔍 Geovi Debug Extended:');
-            console.log('- Container:', this.container);
-            console.log('- Chat:', this.chat);
-            console.log('- Messages:', this.messages);
-            console.log('- Input Area:', this.inputArea);
-            console.log('- Field:', this.field);
-            console.log('- Send:', this.send);
-            
-            // Force input area to be visible
-            if (this.inputArea) {
-                this.inputArea.style.cssText = `
-                    position: fixed !important;
-                    bottom: 0 !important;
-                    left: 0 !important;
-                    right: 0 !important;
-                    height: 90px !important;
-                    background: red !important;
-                    z-index: 999999 !important;
-                    display: flex !important;
-                    padding: 20px !important;
-                    gap: 12px !important;
-                    align-items: center !important;
-                `;
-                console.log('- Input area forced to bottom!');
-            }
-            
-            if (this.field) {
-                this.field.style.cssText = `
-                    flex: 1 !important;
-                    height: 50px !important;
-                    border: 3px solid blue !important;
-                    background: white !important;
-                    border-radius: 25px !important;
-                    padding: 15px !important;
-                    font-size: 16px !important;
-                `;
-                console.log('- Field forced styling!');
-            }
+            console.log('🔥 Geovi Chat Widget v3.0 - Half Screen Setup Complete!');
         }
 
         bindEvents() {
