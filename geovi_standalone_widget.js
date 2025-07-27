@@ -50,34 +50,36 @@
             }
         }
 
-        /* Mobile-specific styles using class instead of media query */
+        /* MOBILE STYLES - Force all mobile styles with !important */
         .geovi-mobile .geovi-character {
-            width: 100px !important;
-            height: 100px !important;
+            width: 90px !important;
+            height: 90px !important;
         }
 
         .geovi-mobile .geovi-smiley-face {
-            width: 90px !important;
-            height: 90px !important;
-            border: 5px solid #000 !important;
+            width: 80px !important;
+            height: 80px !important;
+            border: 4px solid #000 !important;
+            top: 5px !important;
+            left: 5px !important;
         }
 
         .geovi-mobile .geovi-eyes {
-            gap: 14px !important;
-            margin-bottom: 10px !important;
+            gap: 12px !important;
+            margin-bottom: 8px !important;
         }
 
         .geovi-mobile .geovi-eye {
-            width: 16px !important;
-            height: 16px !important;
+            width: 14px !important;
+            height: 14px !important;
         }
 
         .geovi-mobile .geovi-smile {
-            width: 34px !important;
-            height: 17px !important;
-            border: 4px solid #000 !important;
+            width: 30px !important;
+            height: 15px !important;
+            border: 3px solid #000 !important;
             border-top: none !important;
-            border-radius: 0 0 34px 34px !important;
+            border-radius: 0 0 30px 30px !important;
         }
 
         .geovi-mobile .geovi-chat-window {
@@ -86,13 +88,47 @@
             left: 0 !important;
             right: 0 !important;
             bottom: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            height: 100dvh !important;
+            width: 100% !important;
+            height: 100% !important;
             max-height: none !important;
             border-radius: 0 !important;
             border: none !important;
             z-index: 999999 !important;
+        }
+
+        .geovi-mobile .geovi-chat-header {
+            padding: 16px !important;
+            font-size: 18px !important;
+        }
+
+        .geovi-mobile .geovi-chat-header h3 {
+            font-size: 18px !important;
+        }
+
+        .geovi-mobile .geovi-close-btn {
+            width: 40px !important;
+            height: 40px !important;
+            font-size: 20px !important;
+        }
+
+        .geovi-mobile .geovi-message {
+            font-size: 16px !important;
+            padding: 12px 16px !important;
+            line-height: 1.5 !important;
+        }
+
+        .geovi-mobile .geovi-chat-input {
+            font-size: 16px !important;
+            padding: 14px 18px !important;
+        }
+
+        .geovi-mobile .geovi-send-btn {
+            font-size: 16px !important;
+            padding: 14px 20px !important;
+        }
+
+        .geovi-mobile .geovi-chat-input-container {
+            padding: 16px !important;
         }
 
         /* Keep original media query as fallback */
@@ -668,35 +704,38 @@
             this.speechBubble.classList.remove('show');
             const isShowing = this.chatWindow.classList.contains('show');
             
-            console.log('🔄 Toggle chat - Mobile:', this.isMobile, 'Showing:', !isShowing);
-            
             if (isShowing) {
                 this.chatWindow.classList.remove('show');
-                this.enableBodyScroll();
+                if (this.isMobile) {
+                    this.enableBodyScroll();
+                }
             } else {
                 this.chatWindow.classList.add('show');
                 
                 if (this.isMobile) {
                     this.disableBodyScroll();
-                    // Force mobile styles
-                    this.chatWindow.style.cssText = `
-                        position: fixed !important;
-                        top: 0 !important;
-                        left: 0 !important;
-                        right: 0 !important;
-                        bottom: 0 !important;
-                        width: 100vw !important;
-                        height: 100vh !important;
-                        z-index: 999999 !important;
-                        border: none !important;
-                        border-radius: 0 !important;
-                    `;
+                    
+                    // Simple mobile full screen
+                    setTimeout(() => {
+                        this.chatWindow.style.position = 'fixed';
+                        this.chatWindow.style.top = '0px';
+                        this.chatWindow.style.left = '0px';
+                        this.chatWindow.style.right = '0px';
+                        this.chatWindow.style.bottom = '0px';
+                        this.chatWindow.style.width = '100%';
+                        this.chatWindow.style.height = '100%';
+                        this.chatWindow.style.zIndex = '999999';
+                        this.chatWindow.style.border = 'none';
+                        this.chatWindow.style.borderRadius = '0';
+                    }, 10);
                 }
                 
-                // Focus input after a short delay
+                // Focus input
                 setTimeout(() => {
-                    this.chatInput.focus();
-                }, 100);
+                    if (this.chatInput) {
+                        this.chatInput.focus();
+                    }
+                }, 200);
             }
         }
 
@@ -706,56 +745,29 @@
         }
 
         disableBodyScroll() {
-            console.log('🚫 Disabling body scroll');
-            
-            // Save current scroll position
-            this.scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
-            
-            // Disable body scroll with multiple techniques
-            document.body.style.cssText = `
-                overflow: hidden !important;
-                position: fixed !important;
-                width: 100% !important;
-                height: 100% !important;
-                top: -${this.scrollPosition}px !important;
-            `;
-            
-            document.documentElement.style.cssText = `
-                overflow: hidden !important;
-                height: 100% !important;
-            `;
-            
-            // Prevent touch events on body
             if (this.isMobile) {
-                document.body.addEventListener('touchmove', this.preventScroll, { passive: false });
-                document.addEventListener('touchmove', this.preventScroll, { passive: false });
+                // Simple body scroll disable
+                this.scrollPosition = window.pageYOffset;
+                document.body.style.overflow = 'hidden';
+                document.body.style.position = 'fixed';
+                document.body.style.top = `-${this.scrollPosition}px`;
+                document.body.style.width = '100%';
             }
         }
 
         enableBodyScroll() {
-            console.log('✅ Enabling body scroll');
-            
-            // Remove touch event listeners
             if (this.isMobile) {
-                document.body.removeEventListener('touchmove', this.preventScroll);
-                document.removeEventListener('touchmove', this.preventScroll);
+                // Re-enable body scroll
+                document.body.style.overflow = '';
+                document.body.style.position = '';
+                document.body.style.top = '';
+                document.body.style.width = '';
+                
+                // Restore scroll position
+                if (this.scrollPosition !== undefined) {
+                    window.scrollTo(0, this.scrollPosition);
+                }
             }
-            
-            // Re-enable body scroll
-            document.body.style.cssText = '';
-            document.documentElement.style.cssText = '';
-            
-            // Restore scroll position
-            if (this.scrollPosition !== undefined) {
-                window.scrollTo(0, this.scrollPosition);
-                this.scrollPosition = undefined;
-            }
-        }
-
-        preventScroll(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
         }
 
         connect(webhookUrl) {
